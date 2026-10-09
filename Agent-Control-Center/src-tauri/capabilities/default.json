@@ -1,0 +1,1 @@
+{"$schema":"../gen/schemas/desktop-schema.json","identifier":"default","description":"Local read-only monitor","windows":["main"],"permissions":["core:default"]}
