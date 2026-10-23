@@ -1,4 +1,74 @@
-# Agent Control Center V2
+# Agent Control Center 0.3.0
+
+Ứng dụng desktop cho Windows để theo dõi đội agent Codex và chạy kế hoạch Software Team qua Autopilot. Giao diện hỗ trợ light/dark, sidebar thu gọn và thay đổi kích thước cửa sổ. Tên **Autopilot V2** trong giao diện là tên tính năng; phiên bản ứng dụng hiện tại là **0.3.0**.
+
+## Chức năng dùng ngay
+
+| Trang / chức năng | Cách sử dụng |
+| --- | --- |
+| **Overview** | Xem role, model, task, trạng thái quan sát, runtime, lệnh/file gần nhất và token khi dữ liệu có sẵn. |
+| **Workflow** | Xem luồng Planner → Coder/Mobile Dev → Tester → Reviewer; chọn role để xem bằng chứng và sự kiện liên quan. |
+| **Activity log** | Tìm kiếm nội dung, lọc role/loại sự kiện, mở nhóm để xem từng bản ghi và tải lịch sử cũ. |
+| **Autopilot** | Tạo task, khai báo dependency, duyệt revision rồi chạy hàng đợi theo thứ tự phụ thuộc. |
+| **Human direction** | Trả lời khi agent cần hướng dẫn, xử lý yêu cầu đang chờ và duyệt kết quả tại bước human review. |
+| **Run controls** | Tạm dừng giao task mới, tiếp tục hoặc yêu cầu hủy công việc do controller quản lý. |
+| **Model settings** | Chọn model và reasoning cho Planner, Coder, Mobile Dev, Tester, Reviewer; lưu riêng từng role. |
+| **Research Team** | Theo dõi các role nghiên cứu và chỉ số tài liệu trong workspace phù hợp; hiện chỉ giám sát. |
+| **Giao diện** | Dùng nút menu để đóng/mở sidebar; nút mặt trời/mặt trăng để đổi theme. Lựa chọn được lưu trên máy. |
+
+## Bắt đầu sử dụng
+
+### Mở ứng dụng Windows
+
+1. Đóng bản Agent Control Center cũ trước khi mở bản mới.
+2. Chạy `Agent-Control-Center-0.3.0-x64.exe`, hoặc cài bằng `Agent-Control-Center-0.3.0-x64-setup.exe` nếu đã có bộ phát hành. Các file này là sản phẩm build riêng, không nằm trong mã nguồn Git.
+3. Mở **Overview** và kiểm tra kết nối. Monitor đọc session Codex đã có trên máy; role chưa có dữ liệu sẽ hiện thông tin chưa khả dụng.
+4. Chọn **Software Team** hoặc **Research Team** ở sidebar. Mở **Workflow** để xem từng role hoặc **Activity log** để tìm sự kiện.
+
+Máy cần Edge WebView2 để chạy giao diện. Để dùng Autopilot, cần Codex CLI đã đăng nhập và có trong PATH của tiến trình desktop. Không cần Node.js/Rust chỉ để chạy EXE đã build; các công cụ đó cần khi phát triển hoặc tự build từ source.
+
+### Chạy một kế hoạch Autopilot
+
+1. Mở **Autopilot**, nhập tên kế hoạch, đường dẫn workspace và yêu cầu có tiêu chí hoàn thành rõ ràng.
+2. Dùng **Apply Software Team template** hoặc **Add task** để tạo các bước. Dependency là ID task, nhiều ID được phân cách bằng dấu phẩy.
+3. Kiểm tra task, dependency, model, số lần thử và giới hạn token/thời gian. Giữ các bước Tester, Reviewer và Human final review phù hợp với quy trình.
+4. Chọn **Save draft → Approve revision → Start Autopilot**. Sửa kế hoạch đã lưu sẽ làm mất hiệu lực phê duyệt cũ.
+5. Theo dõi **Managed task evidence** và activity của controller. Khi có yêu cầu, trả lời trong **Human direction**; bước duyệt cuối cần quyết định của bạn.
+
+Ví dụ yêu cầu nhỏ để bắt đầu:
+
+> Thêm kiểm tra trường email trong form liên hệ. Email sai định dạng phải hiện thông báo bên dưới ô nhập; email hợp lệ được chấp nhận. Giữ bố cục hiện có, bổ sung kiểm thử phù hợp và dừng tại Human final review.
+
+Autopilot hiện chạy **một task mỗi lần**, dùng chung workspace và cần giữ app mở. **Pause after task** ngăn giao task tiếp theo; task đang chạy có thể tiếp tục. **Request cancel** yêu cầu dừng công việc đang quản lý, không hoàn tác file đã sửa. Khi phục hồi sau gián đoạn, controller cần quyết định rõ ràng trước khi tiếp tục.
+
+### Đổi model cho agent
+
+1. Mở **Model settings**, chọn model và reasoning cho role cần đổi.
+2. Chọn **Save role**; ứng dụng báo đường dẫn bản sao lưu khi ghi thành công.
+3. Bắt đầu phiên mới để dùng mặc định đã lưu. Phiên đang chạy giữ model hiện tại; cấu hình project có thể ghi đè mặc định global.
+4. Với Autopilot, kiểm tra lại model/effort đã lưu trong kế hoạch trước khi duyệt và chạy.
+
+Các lựa chọn model lấy từ catalog cache trên máy, không bảo đảm tài khoản có quyền sử dụng tất cả lựa chọn. Thay đổi Planner là thay đổi mặc định global cho các phiên Codex tương lai, kể cả ngoài ứng dụng này.
+
+### Hiểu trạng thái agent
+
+- **Recent**: có bằng chứng trạng thái trong hai phút gần nhất.
+- **Last observed**: trạng thái được ghi nhận trước đó; chưa có bằng chứng mới đủ gần.
+- **Time unknown**: chưa xác định được thời điểm trạng thái hợp lệ.
+- **Tokens unavailable / Model unavailable**: nguồn log chưa cung cấp đủ thông tin để gán chính xác cho role.
+
+Một lệnh chạy lâu có thể im lặng. Trạng thái cũ không chứng minh agent đã dừng; dispatch cũng không chứng minh subagent đang chạy. Bộ đếm **Recent working observations** chỉ tính Working được quan sát gần đây. Tổng **Observed tokens** bao gồm tất cả session được monitor, không chỉ team đang chọn; **Managed tokens** thuộc kế hoạch Autopilot.
+
+### Phân biệt hai kết nối
+
+| Chỉ báo | Ý nghĩa |
+| --- | --- |
+| **Codex connected / Local Codex events** | Monitor truy cập được thư mục session local; không xác nhận kết nối điều khiển phiên Codex bên ngoài. |
+| **Codex App Server ready** trong Autopilot | Controller đã kết nối App Server riêng để quản lý task của kế hoạch. |
+
+Nếu không thấy subagent hoạt động, kiểm tra **Last observed**, thread và sự kiện liên quan trong Workflow/Activity. Monitor cần log trực tiếp của subagent hoặc snapshot trạng thái có cấu trúc từ parent. App không điều khiển các phiên bên ngoài chỉ bằng việc đọc log.
+
+## Technical reference
 
 Windows-first Tauri desktop application with **Software Team** and **Research Team** profiles. The Overview, Workflow, and Activity pages monitor local sessions. The separate **Autopilot** page controls explicitly approved Software Team plans using its own Codex App Server connection. Research remains monitor-only. Model Settings can update selected Software Team global defaults only after the user selects **Save role**.
 
@@ -42,14 +112,13 @@ Requirements: Node.js 20+, Rust MSVC toolchain, Microsoft C++ Build Tools with D
 
 ```powershell
 npm install
-$env:AGENT_CONTROL_RESEARCH_WORKSPACE = 'C:\Users\ADMIN\Documents\Codex\2026-09-19\referenced-chatgpt-conversation-this-is-an\outputs\Research-Team'
 npm run tauri dev
 ```
 
 After a release build, launch the Research profile with the supplied Windows helper:
 
 ```powershell
-.\start-research-monitor.ps1
+.\start-research-monitor.ps1 -ResearchWorkspace 'C:\path\to\Research-Team'
 ```
 
 Build an installer:
@@ -62,6 +131,7 @@ Frontend checks:
 
 ```powershell
 npm run typecheck
+npm run test:frontend
 npm run build
 ```
 
@@ -95,7 +165,7 @@ On this machine, `npm run typecheck`, `npm run build`, `cargo check`, and `cargo
 - `src-tauri/src/app_server.rs`: official Codex App Server stdio protocol client
 - `src-tauri/tauri.conf.json`: Windows app configuration
 
-## V1.5 limits
+## Current limits
 
 - Role matching uses Codex subagent metadata and root-session Planner attribution. The Software/Research selector separates the profiles, but several projects using the same role can still resolve to the most recently active session.
 - History is stored in SQLite as deduplicated activity metadata and the latest 120 entries are restored when the app opens. The dashboard rebuilds its live card state from recent Codex logs when it starts.
