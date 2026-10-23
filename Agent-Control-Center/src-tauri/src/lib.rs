@@ -1,3 +1,5 @@
+mod app_server;
+mod autopilot;
 mod settings;
 
 use rusqlite::{params, params_from_iter, types::Value as SqlValue, Connection};
@@ -8,7 +10,10 @@ use std::{
     fs::{self, File},
     io::{BufRead, BufReader, Seek, SeekFrom},
     path::PathBuf,
-    sync::Mutex,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Mutex,
+    },
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tauri::{Emitter, Manager};
@@ -28,6 +33,11 @@ struct AgentState {
     command: String,
     started_at: String,
     updated_at: String,
+    // Timestamp and source of the event that directly established `status`.
+    // `updated_at` tracks any source activity and must not be used to imply that
+    // an old working/waiting observation is still current.
+    status_observed_at: String,
+    status_source: String,
     input_tokens: u64,
     output_tokens: u64,
     tokens_observed: bool,
@@ -137,7 +147,10 @@ fn roles_for_team(team: &str) -> Result<Vec<&'static str>, String> {
     }
 }
 fn escape_like(query: &str) -> String {
-    query.replace('\\', "\\\\").replace('%', "\\%").replace('_', "\\_")
+    query
+        .replace('\\', "\\\\")
+        .replace('%', "\\%")
+        .replace('_', "\\_")
 }
 fn field<'a>(v: &'a Value, k: &str) -> &'a str {
     v.get(k).and_then(Value::as_str).unwrap_or("")
@@ -212,8 +225,15 @@ fn is_research_role(raw: &str) -> bool {
 }
 fn is_monitored_subagent(raw: &str) -> bool {
     raw.is_empty()
-        || ["planner", "coder", "mobile-dev", "mobile_dev", "tester", "reviewer"]
-            .contains(&raw.to_ascii_lowercase().as_str())
+        || [
+            "planner",
+            "coder",
+            "mobile-dev",
+            "mobile_dev",
+            "tester",
+            "reviewer",
+        ]
+        .contains(&raw.to_ascii_lowercase().as_str())
         || is_research_role(raw)
 }
 fn is_research_workspace(raw: &str) -> bool {
@@ -229,12 +249,16 @@ fn text_content(v: &Value) -> String {
 }
 
 fn delegated_role(value: &Value) -> Option<String> {
-    for field_name in ["agent_type", "agent_role", "role", "task_name", "agent_name", "target"] {
+    for field_name in [
+        "agent_type",
+        "agent_role",
+        "role",
+        "task_name",
+        "agent_name",
+        "target",
+    ] {
         let raw = field(value, field_name);
-        let leaf = raw
-            .rsplit(|c| c == '/' || c == '\\')
-            .next()
-            .unwrap_or(raw);
+        let leaf = raw.rsplit(|c| c == '/' || c == '\\').next().unwrap_or(raw);
         let normalized = leaf.to_ascii_lowercase().replace('_', "-");
         let role = match normalized.as_str() {
             "planner" => "Planner",
@@ -256,7 +280,14 @@ fn delegated_role(value: &Value) -> Option<String> {
 }
 
 fn delegated_identity(value: &Value) -> Option<String> {
-    for field_name in ["task_name", "agent_name", "target", "agent_role", "role", "agent_type"] {
+    for field_name in [
+        "task_name",
+        "agent_name",
+        "target",
+        "agent_role",
+        "role",
+        "agent_type",
+    ] {
         let raw = field(value, field_name);
         if raw.is_empty() {
             continue;
@@ -282,10 +313,10 @@ fn task_text(value: &str) -> String {
 
 fn normalize_agent_status(value: &Value) -> Option<&'static str> {
     let raw = value.as_str().or_else(|| {
-        if value.get("completed").is_some_and(|v| !v.is_null()) {
-            Some("done")
-        } else if value.get("errored").is_some_and(|v| !v.is_null()) {
+        if value.get("errored").is_some_and(|v| !v.is_null()) {
             Some("failed")
+        } else if value.get("completed").is_some_and(|v| !v.is_null()) {
+            Some("done")
         } else {
             value.get("status").and_then(Value::as_str)
         }
@@ -299,6 +330,122 @@ fn normalize_agent_status(value: &Value) -> Option<&'static str> {
         "done" | "complete" | "completed" | "finished" => Some("done"),
         _ => None,
     }
+}
+
+fn rfc3339_order_key(value: &str) -> Option<i128> {
+    fn number(bytes: &[u8]) -> Option<i64> {
+        std::str::from_utf8(bytes).ok()?.parse().ok()
+    }
+    let bytes = value.as_bytes();
+    if bytes.len() < 20
+        || bytes.get(4) != Some(&b'-')
+        || bytes.get(7) != Some(&b'-')
+        || !matches!(bytes.get(10), Some(b'T' | b't' | b' '))
+        || bytes.get(13) != Some(&b':')
+        || bytes.get(16) != Some(&b':')
+    {
+        return None;
+    }
+    let mut year = number(&bytes[0..4])?;
+    let month = number(&bytes[5..7])?;
+    let day = number(&bytes[8..10])?;
+    let hour = number(&bytes[11..13])?;
+    let minute = number(&bytes[14..16])?;
+    let second = number(&bytes[17..19])?;
+    if !(1..=12).contains(&month)
+        || !(1..=31).contains(&day)
+        || hour > 23
+        || minute > 59
+        || second > 60
+    {
+        return None;
+    }
+    let mut cursor = 19;
+    let mut nanos = 0i128;
+    if bytes.get(cursor) == Some(&b'.') {
+        cursor += 1;
+        let start = cursor;
+        while bytes.get(cursor).is_some_and(u8::is_ascii_digit) {
+            cursor += 1;
+        }
+        if cursor == start {
+            return None;
+        }
+        let fraction = &value[start..cursor];
+        let digits = &fraction[..fraction.len().min(9)];
+        nanos = digits.parse::<i128>().ok()? * 10i128.pow((9 - digits.len()) as u32);
+    }
+    let offset_seconds = match bytes.get(cursor) {
+        Some(b'Z' | b'z') if cursor + 1 == bytes.len() => 0i64,
+        Some(sign @ (b'+' | b'-'))
+            if cursor + 6 == bytes.len() && bytes.get(cursor + 3) == Some(&b':') =>
+        {
+            let hours = number(&bytes[cursor + 1..cursor + 3])?;
+            let minutes = number(&bytes[cursor + 4..cursor + 6])?;
+            if hours > 23 || minutes > 59 {
+                return None;
+            }
+            let offset = hours * 3600 + minutes * 60;
+            if *sign == b'-' {
+                -offset
+            } else {
+                offset
+            }
+        }
+        _ => return None,
+    };
+    year -= i64::from(month <= 2);
+    let era = year.div_euclid(400);
+    let year_of_era = year - era * 400;
+    let shifted_month = month + if month > 2 { -3 } else { 9 };
+    let day_of_year = (153 * shifted_month + 2) / 5 + day - 1;
+    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+    let days_since_epoch = era * 146_097 + day_of_era - 719_468;
+    let seconds = days_since_epoch * 86_400 + hour * 3600 + minute * 60 + second - offset_seconds;
+    Some(seconds as i128 * 1_000_000_000 + nanos)
+}
+
+fn source_time_is_older(candidate: &str, current: &str) -> bool {
+    source_time_cmp(candidate, current).is_lt()
+}
+
+fn source_time_cmp(left: &str, right: &str) -> std::cmp::Ordering {
+    match (rfc3339_order_key(left), rfc3339_order_key(right)) {
+        (Some(left), Some(right)) => left.cmp(&right),
+        _ => left.cmp(right),
+    }
+}
+
+fn observe_activity(agent: &mut AgentState, at: &str) {
+    if !at.is_empty()
+        && (agent.updated_at.is_empty() || !source_time_is_older(at, &agent.updated_at))
+    {
+        agent.updated_at = at.into();
+    }
+}
+
+fn status_evidence_time(agent: &AgentState) -> &str {
+    if agent.status_observed_at.is_empty() {
+        &agent.updated_at
+    } else {
+        &agent.status_observed_at
+    }
+}
+
+/// Applies lifecycle evidence without allowing an older record encountered during
+/// a rescan to replace a newer observation.
+fn observe_status(agent: &mut AgentState, status: &str, at: &str, source: &str) -> bool {
+    if at.is_empty()
+        || (!agent.status_observed_at.is_empty()
+            && source_time_is_older(at, &agent.status_observed_at))
+    {
+        return false;
+    }
+    agent.status = status.into();
+    agent.status_observed_at = at.into();
+    agent.status_source = source.into();
+    observe_activity(agent, at);
+    true
 }
 
 fn paths_to_scan(paths: Vec<PathBuf>, tracked: &HashMap<PathBuf, u64>) -> Vec<PathBuf> {
@@ -345,7 +492,9 @@ impl Monitor {
         db.execute_batch("CREATE UNIQUE INDEX IF NOT EXISTS events_event_key ON events(event_key) WHERE event_key IS NOT NULL;")
             .map_err(|e| e.to_string())?;
         let next_id = db
-            .query_row("SELECT COALESCE(MAX(id), 0) FROM events", [], |row| row.get(0))
+            .query_row("SELECT COALESCE(MAX(id), 0) FROM events", [], |row| {
+                row.get(0)
+            })
             .map_err(|e| e.to_string())?;
         let mut activity = Vec::new();
         let mut rows = db
@@ -418,7 +567,10 @@ impl Monitor {
         let limit = filter.limit.unwrap_or(50).clamp(1, 100);
         let mut predicates = vec![format!(
             "role IN ({})",
-            std::iter::repeat("?").take(permitted_roles.len()).collect::<Vec<_>>().join(",")
+            std::iter::repeat("?")
+                .take(permitted_roles.len())
+                .collect::<Vec<_>>()
+                .join(",")
         )];
         let mut values: Vec<SqlValue> = permitted_roles
             .into_iter()
@@ -484,33 +636,45 @@ impl Monitor {
             .unwrap_or_else(|| raw_thread_id.into())
     }
 
-    fn observe_delegation(&mut self, parent_id: &str, identity: &str, role: &str, at: &str, task: &str, detail: &str) {
+    fn observe_delegation(
+        &mut self,
+        parent_id: &str,
+        identity: &str,
+        role: &str,
+        at: &str,
+        task: &str,
+        detail: &str,
+    ) {
         let Some(parent) = self.agents.get(parent_id) else {
             return;
         };
         let key = format!("{parent_id}::delegated::{identity}");
         let team = parent.team.clone();
         let workspace = parent.workspace.clone();
-        let child = self.agents.entry(key.clone()).or_insert_with(|| AgentState {
-            team,
-            role: role.into(),
-            status: "waiting".into(),
-            workspace,
-            parent_id: parent_id.into(),
-            ..Default::default()
-        });
+        let child = self
+            .agents
+            .entry(key.clone())
+            .or_insert_with(|| AgentState {
+                team,
+                role: role.into(),
+                status: "waiting".into(),
+                workspace,
+                parent_id: parent_id.into(),
+                ..Default::default()
+            });
         child.parent_id = parent_id.into();
         // A dispatch confirms that a child was requested, but it does not prove the
         // child is still running. list_agents is the authoritative lifecycle source.
-        child.status = "waiting".into();
-        child.updated_at = at.into();
-        if child.started_at.is_empty() || detail.starts_with("Follow-up") {
+        let status_applied = observe_status(child, "waiting", at, "delegation");
+        if status_applied && (child.started_at.is_empty() || detail.starts_with("Follow-up")) {
             child.started_at = at.into();
         }
-        if !task.is_empty() {
-            child.task = task_text(task);
+        if status_applied {
+            if !task.is_empty() {
+                child.task = task_text(task);
+            }
+            child.detail = detail.into();
         }
-        child.detail = detail.into();
         self.record(at, &key, role, "delegation", "Delegated agent observed");
     }
 
@@ -522,9 +686,7 @@ impl Monitor {
             let Some(identity) = delegated_identity(item) else {
                 continue;
             };
-            let status = item
-                .get("agent_status")
-                .and_then(normalize_agent_status);
+            let status = item.get("agent_status").and_then(normalize_agent_status);
             let Some(status) = status else {
                 continue;
             };
@@ -532,11 +694,18 @@ impl Monitor {
             let Some(child) = self.agents.get_mut(&key) else {
                 continue;
             };
-            child.status = status.into();
-            child.updated_at = at.into();
+            if !observe_status(child, status, at, "list_agents") {
+                continue;
+            }
             child.detail = "Observed by list_agents".into();
             let role = child.role.clone();
-            self.record(at, &key, &role, "status", &format!("Agent status: {status}"));
+            self.record(
+                at,
+                &key,
+                &role,
+                "status",
+                &format!("Agent status: {status}"),
+            );
         }
     }
     fn ingest(&mut self, line: &str) {
@@ -574,14 +743,23 @@ impl Monitor {
                 self.session_aliases.insert(session_id.into(), key.into());
             }
             let a = self.agents.entry(key.to_owned()).or_default();
-            a.thread_id = if session_id.is_empty() { key } else { session_id }.into();
+            a.thread_id = if session_id.is_empty() {
+                key
+            } else {
+                session_id
+            }
+            .into();
             a.team = team.into();
             a.role = role.clone();
             a.workspace = workspace.into();
             a.started_at = at.clone();
-            a.updated_at = at.clone();
             if a.status.is_empty() {
                 a.status = "idle".into();
+                if !at.is_empty() {
+                    observe_status(a, "idle", &at, "session");
+                }
+            } else {
+                observe_activity(a, &at);
             }
             self.record(&at, key, &role, "session", "Session discovered");
             return;
@@ -615,7 +793,7 @@ impl Monitor {
         let Some(a) = self.agents.get_mut(&id) else {
             return;
         };
-        a.updated_at = at.clone();
+        observe_activity(a, &at);
         let mut event: Option<(&str, String)> = None;
         let mut delegated: Option<(String, Option<String>, String, String)> = None;
         let mut list_agent_call_id: Option<String> = None;
@@ -656,24 +834,25 @@ impl Monitor {
             }
             "event_msg" => match field(p, "type") {
                 "task_started" => {
-                    a.status = "working".into();
-                    a.started_at = at.clone();
+                    if observe_status(a, "working", &at, "turn") {
+                        a.started_at = at.clone();
+                    }
                     event = Some(("turn", "Turn started".into()));
                 }
                 "task_complete" | "turn_complete" => {
-                    a.status = "done".into();
+                    observe_status(a, "done", &at, "turn");
                     event = Some(("turn", "Turn completed".into()));
                 }
                 "task_failed" => {
-                    a.status = "failed".into();
+                    observe_status(a, "failed", &at, "turn");
                     event = Some(("error", "Turn failed".into()));
                 }
                 "turn_aborted" => {
-                    a.status = "blocked".into();
+                    observe_status(a, "blocked", &at, "turn");
                     event = Some(("turn", "Turn interrupted".into()));
                 }
                 "request_user_input" | "approval_requested" => {
-                    a.status = "blocked".into();
+                    observe_status(a, "blocked", &at, "approval");
                     event = Some(("approval", "Waiting for user action".into()));
                 }
                 "agent_message" => {
@@ -693,6 +872,9 @@ impl Monitor {
                     let item = &p["item"];
                     let kind = field(item, "type");
                     let normalized_kind = normalized_item_type(item);
+                    if field(p, "type") == "item_started" {
+                        observe_status(a, "working", &at, "turn");
+                    }
                     if normalized_kind == "commandexecution" {
                         a.command = short(field(item, "command"), 100);
                         a.detail = a.command.clone();
@@ -730,6 +912,7 @@ impl Monitor {
                 }
                 "custom_tool_call" | "function_call" => {
                     let name = field(p, "name");
+                    observe_status(a, "working", &at, "turn");
                     a.detail = short(name, 100);
                     if name == "spawn_agent" || name == "followup_task" {
                         if let Ok(args) = serde_json::from_str::<Value>(field(p, "arguments")) {
@@ -739,7 +922,12 @@ impl Monitor {
                                 } else {
                                     "Dispatched · status unavailable"
                                 };
-                                delegated = Some((identity, delegated_role(&args), field(&args, "message").into(), detail.into()));
+                                delegated = Some((
+                                    identity,
+                                    delegated_role(&args),
+                                    field(&args, "message").into(),
+                                    detail.into(),
+                                ));
                             }
                         }
                     }
@@ -750,13 +938,13 @@ impl Monitor {
                         }
                     }
                     if name.contains("wait_agent") || name.contains("wait_threads") {
-                        a.status = "waiting".into();
+                        observe_status(a, "waiting", &at, "wait");
                     }
                     event = Some(("tool", format!("Tool: {}", name)));
                 }
                 "custom_tool_call_output" | "function_call_output" => {
                     if a.status == "waiting" {
-                        a.status = "working".into();
+                        observe_status(a, "working", &at, "wait");
                     }
                     let call_id = field(p, "call_id");
                     if !call_id.is_empty() {
@@ -786,7 +974,10 @@ impl Monitor {
             }
         }
         if let Some((call_id, statuses)) = agent_status_output {
-            if self.list_agent_calls.contains(&format!("{id}\u{1f}{call_id}")) {
+            if self
+                .list_agent_calls
+                .contains(&format!("{id}\u{1f}{call_id}"))
+            {
                 self.observe_agent_statuses(&id, &statuses, &at);
             }
         }
@@ -848,7 +1039,8 @@ impl Monitor {
                 self.agents.remove(&context);
                 self.session_aliases.retain(|_, key| key != &context);
                 let token_prefix = format!("{context}\u{1e}");
-                self.agent_token_records.retain(|key| !key.starts_with(&token_prefix));
+                self.agent_token_records
+                    .retain(|key| !key.starts_with(&token_prefix));
                 let list_calls_prefix = format!("{context}\u{1f}");
                 self.list_agent_calls
                     .retain(|key| !key.starts_with(&list_calls_prefix));
@@ -896,7 +1088,7 @@ impl Monitor {
     }
     fn snapshot(&self) -> Snapshot {
         let mut agents: Vec<_> = self.agents.values().cloned().collect();
-        agents.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+        agents.sort_by(|a, b| source_time_cmp(&b.updated_at, &a.updated_at));
         // A card shows the most recently active session of each configured role in each profile.
         let mut cards = Vec::new();
         for (team, role) in [
@@ -918,8 +1110,8 @@ impl Monitor {
                 .filter(|a| a.team == team && a.role == role)
                 .collect();
             let newest = role_agents.iter().copied().max_by(|a, b| {
-                a.updated_at
-                    .cmp(&b.updated_at)
+                source_time_cmp(status_evidence_time(a), status_evidence_time(b))
+                    .then_with(|| source_time_cmp(&a.updated_at, &b.updated_at))
                     .then_with(|| (!a.thread_id.is_empty()).cmp(&(!b.thread_id.is_empty())))
             });
             let Some(newest) = newest else {
@@ -947,10 +1139,14 @@ impl Monitor {
                 .copied()
                 .filter(|a| a.status == "working")
                 .collect();
-            let selection = if active_agents.is_empty() { &cohort } else { &active_agents };
+            let selection = if active_agents.is_empty() {
+                &cohort
+            } else {
+                &active_agents
+            };
             if let Some(a) = selection.iter().copied().max_by(|a, b| {
-                a.updated_at
-                    .cmp(&b.updated_at)
+                source_time_cmp(status_evidence_time(a), status_evidence_time(b))
+                    .then_with(|| source_time_cmp(&a.updated_at, &b.updated_at))
                     .then_with(|| (!a.thread_id.is_empty()).cmp(&(!b.thread_id.is_empty())))
             }) {
                 let mut card = a.clone();
@@ -980,11 +1176,19 @@ impl Monitor {
         let research = research_root.map(research_metrics).unwrap_or_default();
         let source_available = self.source_dir.is_dir();
         Snapshot {
-            connection: if source_available { "connected" } else { "disconnected" }.into(),
+            connection: if source_available {
+                "connected"
+            } else {
+                "disconnected"
+            }
+            .into(),
             source: if source_available {
                 "Codex local session events (read only)".into()
             } else {
-                format!("Codex session directory is unavailable: {}", self.source_dir.display())
+                format!(
+                    "Codex session directory is unavailable: {}",
+                    self.source_dir.display()
+                )
             },
             agents: cards,
             activity: self
@@ -1127,17 +1331,625 @@ fn save_agent_model(
         .save(&role_key, &model, &effort, &revision)
 }
 
+struct AutopilotRuntime {
+    client: Mutex<Option<app_server::AppServerClient>>,
+    control: Mutex<()>,
+    stopping: AtomicBool,
+}
+
+#[tauri::command]
+fn get_autopilot_snapshot(
+    state: tauri::State<'_, Mutex<autopilot::AutopilotController>>,
+) -> Result<autopilot::AutopilotSnapshot, String> {
+    Ok(state.lock().map_err(|e| e.to_string())?.snapshot())
+}
+
+#[tauri::command]
+fn save_autopilot_plan(
+    mut input: autopilot::AutopilotPlanInput,
+    state: tauri::State<'_, Mutex<autopilot::AutopilotController>>,
+    settings_state: tauri::State<'_, Mutex<settings::SettingsService>>,
+) -> Result<autopilot::AutopilotSnapshot, String> {
+    // Resolve current role defaults while the plan is still a draft. They are
+    // persisted on each task so approval freezes the exact reviewed model and
+    // effort even if global Codex settings change during a run.
+    let current = settings_state.lock().map_err(|e| e.to_string())?.get();
+    for task in &mut input.tasks {
+        if task.role == "human" {
+            continue;
+        }
+        if let Some(role) = current.roles.iter().find(|role| role.key == task.role) {
+            if task
+                .model
+                .as_deref()
+                .is_none_or(|value| value.trim().is_empty())
+            {
+                task.model = Some(role.model.clone());
+            }
+            if task
+                .effort
+                .as_deref()
+                .is_none_or(|value| value.trim().is_empty())
+            {
+                task.effort = Some(role.effort.clone());
+            }
+        }
+    }
+    state.lock().map_err(|e| e.to_string())?.save_plan(input)
+}
+
+#[tauri::command]
+fn approve_autopilot_plan(
+    plan_id: String,
+    revision: u64,
+    state: tauri::State<'_, Mutex<autopilot::AutopilotController>>,
+) -> Result<autopilot::AutopilotSnapshot, String> {
+    state
+        .lock()
+        .map_err(|e| e.to_string())?
+        .approve_plan(&plan_id, revision)
+}
+
+#[tauri::command]
+fn start_autopilot(
+    plan_id: String,
+    revision: u64,
+    state: tauri::State<'_, Mutex<autopilot::AutopilotController>>,
+) -> Result<autopilot::AutopilotSnapshot, String> {
+    state
+        .lock()
+        .map_err(|e| e.to_string())?
+        .start(&plan_id, revision)
+}
+
+#[tauri::command]
+fn pause_autopilot(
+    plan_id: String,
+    state: tauri::State<'_, Mutex<autopilot::AutopilotController>>,
+) -> Result<autopilot::AutopilotSnapshot, String> {
+    state.lock().map_err(|e| e.to_string())?.pause(&plan_id)
+}
+
+#[tauri::command]
+fn resume_autopilot(
+    plan_id: String,
+    state: tauri::State<'_, Mutex<autopilot::AutopilotController>>,
+) -> Result<autopilot::AutopilotSnapshot, String> {
+    state.lock().map_err(|e| e.to_string())?.resume(&plan_id)
+}
+
+#[tauri::command]
+fn cancel_autopilot(
+    plan_id: String,
+    state: tauri::State<'_, Mutex<autopilot::AutopilotController>>,
+    runtime: tauri::State<'_, AutopilotRuntime>,
+) -> Result<autopilot::AutopilotSnapshot, String> {
+    let _control = runtime.control.lock().map_err(|e| e.to_string())?;
+    let active = {
+        let mut controller = state.lock().map_err(|e| e.to_string())?;
+        controller.begin_cancel(&plan_id)?
+    };
+    let client = runtime.client.lock().map_err(|e| e.to_string())?.clone();
+    let mut force_shutdown = false;
+    for original in active {
+        let deadline = std::time::Instant::now() + Duration::from_secs(5);
+        let mut identity = original.clone();
+        while identity.turn_id.is_empty() && std::time::Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(50));
+            let current = state
+                .lock()
+                .map_err(|e| e.to_string())?
+                .identity_for(&identity.task_id);
+            let Some(current) = current else { break };
+            if current.plan_id != identity.plan_id || current.revision != identity.revision {
+                break;
+            }
+            identity = current;
+        }
+        if identity.turn_id.is_empty() {
+            force_shutdown = true;
+            continue;
+        }
+        let Some(client) = client.as_ref() else {
+            force_shutdown = true;
+            continue;
+        };
+        if client
+            .interrupt(&identity.thread_id, &identity.turn_id)
+            .is_err()
+        {
+            force_shutdown = true;
+            continue;
+        }
+        let mut terminal = false;
+        while std::time::Instant::now() < deadline {
+            match client.turn_progress(&identity.turn_id) {
+                Ok(progress) if progress.terminal => {
+                    terminal = true;
+                    break;
+                }
+                Ok(_) => std::thread::sleep(Duration::from_millis(50)),
+                Err(_) => {
+                    force_shutdown = true;
+                    break;
+                }
+            }
+        }
+        if !terminal {
+            force_shutdown = true;
+        }
+    }
+    if force_shutdown {
+        if let Some(client) = client.as_ref() {
+            client.shutdown();
+        }
+        *runtime.client.lock().map_err(|e| e.to_string())? = None;
+        if let Ok(mut controller) = state.lock() {
+            controller.set_connection(
+                false,
+                "Codex App Server was stopped because turn cancellation could not be confirmed",
+            );
+        }
+    }
+    state
+        .lock()
+        .map_err(|e| e.to_string())?
+        .finish_cancel(&plan_id)
+}
+
+#[tauri::command]
+fn respond_autopilot_gate(
+    plan_id: String,
+    task_id: String,
+    response: String,
+    approve: bool,
+    retry: bool,
+    state: tauri::State<'_, Mutex<autopilot::AutopilotController>>,
+    runtime: tauri::State<'_, AutopilotRuntime>,
+) -> Result<autopilot::AutopilotSnapshot, String> {
+    let _control = runtime.control.lock().map_err(|e| e.to_string())?;
+    state
+        .lock()
+        .map_err(|e| e.to_string())?
+        .respond_gate(&plan_id, &task_id, &response, approve, retry)
+}
+
+#[tauri::command]
+fn respond_autopilot_request(
+    plan_id: String,
+    plan_revision: u64,
+    task_id: String,
+    request_id: Value,
+    thread_id: String,
+    turn_id: String,
+    decision: String,
+    input: Option<Value>,
+    state: tauri::State<'_, Mutex<autopilot::AutopilotController>>,
+    runtime: tauri::State<'_, AutopilotRuntime>,
+    handle: tauri::AppHandle,
+) -> Result<autopilot::AutopilotSnapshot, String> {
+    let _control = runtime.control.lock().map_err(|e| e.to_string())?;
+    let (identity, request) = {
+        let controller = state.lock().map_err(|e| e.to_string())?;
+        controller.pending_request_exact(
+            &plan_id,
+            plan_revision,
+            &task_id,
+            &request_id,
+            &thread_id,
+            &turn_id,
+        )?
+    };
+    let human_decision = match decision.as_str() {
+        "accept" => app_server::HumanDecision::Accept,
+        "decline" => app_server::HumanDecision::Decline,
+        "cancel" => app_server::HumanDecision::Cancel,
+        "submit" => app_server::HumanDecision::Submit {
+            value: input.ok_or("Submit requires input")?,
+        },
+        _ => return Err("Unsupported human decision".into()),
+    };
+    let client = runtime
+        .client
+        .lock()
+        .map_err(|e| e.to_string())?
+        .clone()
+        .ok_or("Codex App Server is unavailable")?;
+    client.respond_to_human_request(&request, human_decision)?;
+    let resolved = {
+        let mut controller = state.lock().map_err(|e| e.to_string())?;
+        match controller.pending_request_exact(
+            &plan_id,
+            plan_revision,
+            &task_id,
+            &request_id,
+            &thread_id,
+            &turn_id,
+        ) {
+            Ok(_) => controller.resolve_pending_request_bound(&identity, &request.request_id),
+            Err(error) => Err(error),
+        }
+    };
+    if let Err(error) = resolved {
+        client.shutdown();
+        *runtime.client.lock().map_err(|e| e.to_string())? = None;
+        if let Ok(mut controller) = state.lock() {
+            controller.set_connection(
+                false,
+                "Codex App Server was stopped after a human-response identity race",
+            );
+        }
+        return Err(error);
+    }
+    let snapshot = {
+        let controller = state.lock().map_err(|e| e.to_string())?;
+        controller.snapshot()
+    };
+    let _ = handle.emit("autopilot-update", snapshot.clone());
+    Ok(snapshot)
+}
+
+fn wait_for_managed_turn(
+    handle: tauri::AppHandle,
+    client: app_server::AppServerClient,
+    identity: autopilot::TaskRunIdentity,
+) {
+    loop {
+        let stopping = handle
+            .try_state::<AutopilotRuntime>()
+            .is_some_and(|runtime| runtime.stopping.load(Ordering::SeqCst));
+        if stopping {
+            return;
+        }
+        let progress = match client.turn_progress(&identity.turn_id) {
+            Ok(progress) => progress,
+            Err(error) => {
+                if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+                    if let Ok(mut controller) = state.lock() {
+                        if controller.is_task_running_bound(&identity) {
+                            let _ = controller.fail_dispatch_bound(&identity, &error);
+                            controller.set_connection(false, error);
+                            let _ = handle.emit("autopilot-update", controller.snapshot());
+                        }
+                    }
+                }
+                return;
+            }
+        };
+        let events = client.drain_events();
+        let mut should_stop = false;
+        let mut remaining = Duration::from_secs(1);
+        if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+            if let Ok(mut controller) = state.lock() {
+                if !controller.is_task_running_bound(&identity) {
+                    should_stop = true;
+                }
+                if !should_stop {
+                    if !events.is_empty() {
+                        let _ = controller.record_transport_events_bound(&identity, events);
+                    }
+                    if controller
+                        .update_turn_usage_bound(
+                            &identity,
+                            progress.input_tokens,
+                            progress.output_tokens,
+                        )
+                        .unwrap_or(true)
+                    {
+                        let _ = controller.fail_dispatch_bound(
+                            &identity,
+                            "Token or runtime limit reached during this turn",
+                        );
+                        should_stop = true;
+                    }
+                    remaining = controller.remaining_runtime();
+                    if remaining.is_zero() {
+                        let _ = controller.fail_dispatch_bound(
+                            &identity,
+                            "Runtime limit reached during this turn",
+                        );
+                        should_stop = true;
+                    }
+                    if !progress.human_requests.is_empty() {
+                        let _ = controller
+                            .set_human_requests_bound(&identity, progress.human_requests.clone());
+                        let _ = handle.emit("autopilot-update", controller.snapshot());
+                        drop(controller);
+                        loop {
+                            if handle
+                                .try_state::<AutopilotRuntime>()
+                                .is_some_and(|runtime| runtime.stopping.load(Ordering::SeqCst))
+                            {
+                                return;
+                            }
+                            let status = handle
+                                .try_state::<Mutex<autopilot::AutopilotController>>()
+                                .and_then(|state| {
+                                    state.lock().ok().and_then(|controller| {
+                                        controller.task_status_bound(&identity).ok()
+                                    })
+                                });
+                            match status.as_deref() {
+                                Some("needsInput") => {
+                                    std::thread::sleep(Duration::from_millis(100))
+                                }
+                                Some("running") => break,
+                                _ => return,
+                            }
+                        }
+                        continue;
+                    }
+                    let _ = handle.emit("autopilot-update", controller.snapshot());
+                }
+            }
+        }
+        if should_stop {
+            if client
+                .interrupt(&identity.thread_id, &identity.turn_id)
+                .is_err()
+            {
+                client.shutdown();
+                if let Some(runtime) = handle.try_state::<AutopilotRuntime>() {
+                    if let Ok(mut stored) = runtime.client.lock() {
+                        *stored = None;
+                    }
+                }
+                if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+                    if let Ok(mut controller) = state.lock() {
+                        controller.set_connection(false, "Codex App Server was stopped because the active turn could not be interrupted");
+                    }
+                }
+            }
+            return;
+        }
+        let result = client.wait_turn(&identity.turn_id, remaining.min(Duration::from_secs(1)));
+        match result {
+            Ok(result) if result.status == "needs_input" => {
+                if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+                    if let Ok(mut controller) = state.lock() {
+                        let _ =
+                            controller.set_human_requests_bound(&identity, result.human_requests);
+                        let _ = handle.emit("autopilot-update", controller.snapshot());
+                    }
+                }
+                loop {
+                    if handle
+                        .try_state::<AutopilotRuntime>()
+                        .is_some_and(|runtime| runtime.stopping.load(Ordering::SeqCst))
+                    {
+                        return;
+                    }
+                    let status = handle
+                        .try_state::<Mutex<autopilot::AutopilotController>>()
+                        .and_then(|state| {
+                            state
+                                .lock()
+                                .ok()
+                                .and_then(|controller| controller.task_status_bound(&identity).ok())
+                        });
+                    match status.as_deref() {
+                        Some("needsInput") => std::thread::sleep(Duration::from_millis(100)),
+                        Some("running") => break,
+                        _ => return,
+                    }
+                }
+                continue;
+            }
+            Ok(result) => {
+                if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+                    if let Ok(mut controller) = state.lock() {
+                        if controller.is_task_running_bound(&identity) {
+                            if let Err(error) = controller.complete_turn_bound(
+                                &identity,
+                                &result.status,
+                                result.structured_output.as_ref(),
+                                result.input_tokens,
+                                result.output_tokens,
+                                result.error.as_deref(),
+                            ) {
+                                let _ = controller.fail_dispatch_bound(&identity, &error);
+                            }
+                            let _ = handle.emit("autopilot-update", controller.snapshot());
+                        }
+                    }
+                }
+                return;
+            }
+            Err(error) if error.starts_with("Timed out waiting for Codex turn") => continue,
+            Err(error) => {
+                if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+                    if let Ok(mut controller) = state.lock() {
+                        if controller.is_task_running_bound(&identity) {
+                            let _ = controller.fail_dispatch_bound(&identity, &error);
+                            controller.set_connection(false, error);
+                            let _ = handle.emit("autopilot-update", controller.snapshot());
+                        }
+                    }
+                }
+                return;
+            }
+        }
+    }
+}
+
+fn run_autopilot_worker(handle: tauri::AppHandle) {
+    let codex_binary = match app_server::discover_codex_binary() {
+        Ok(path) => path,
+        Err(error) => {
+            if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+                if let Ok(mut controller) = state.lock() {
+                    controller.set_connection(false, error);
+                }
+            }
+            return;
+        }
+    };
+    let client = match app_server::AppServerClient::spawn(codex_binary, Duration::from_secs(20)) {
+        Ok(client) => client,
+        Err(error) => {
+            if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+                if let Ok(mut controller) = state.lock() {
+                    controller.set_connection(false, error);
+                    let _ = handle.emit("autopilot-update", controller.snapshot());
+                }
+            }
+            return;
+        }
+    };
+    let connection = match client.capability_probe() {
+        Ok(capability) => format!(
+            "Codex App Server ready ({} models)",
+            capability.models.len()
+        ),
+        Err(error) => {
+            client.shutdown();
+            if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+                if let Ok(mut controller) = state.lock() {
+                    controller.set_connection(false, error);
+                    let _ = handle.emit("autopilot-update", controller.snapshot());
+                }
+            }
+            return;
+        }
+    };
+    if let Some(runtime) = handle.try_state::<AutopilotRuntime>() {
+        if let Ok(mut stored) = runtime.client.lock() {
+            *stored = Some(client.clone());
+        }
+    }
+    if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+        if let Ok(mut controller) = state.lock() {
+            controller.set_connection(true, connection);
+            let _ = handle.emit("autopilot-update", controller.snapshot());
+        }
+    }
+    loop {
+        if handle
+            .try_state::<AutopilotRuntime>()
+            .is_some_and(|runtime| runtime.stopping.load(Ordering::SeqCst))
+        {
+            break;
+        }
+        let task = handle
+            .try_state::<Mutex<autopilot::AutopilotController>>()
+            .and_then(|state| {
+                state
+                    .lock()
+                    .ok()
+                    .and_then(|controller| controller.next_ready_task())
+            });
+        let Some(task) = task else {
+            if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+                if let Ok(mut controller) = state.lock() {
+                    if controller.activate_human_gate().unwrap_or(false) {
+                        let _ = handle.emit("autopilot-update", controller.snapshot());
+                    }
+                }
+            }
+            std::thread::sleep(Duration::from_millis(300));
+            continue;
+        };
+        let (workspace, prompt, reserved) = match handle
+            .try_state::<Mutex<autopilot::AutopilotController>>()
+            .and_then(|state| {
+                state.lock().ok().and_then(|mut controller| {
+                    let workspace = controller.snapshot().plan.map(|plan| plan.workspace)?;
+                    let prompt = controller.plan_prompt(&task).ok()?;
+                    let identity = controller.reserve_task_bound(&task.id).ok()?;
+                    Some((workspace, prompt, identity))
+                })
+            }) {
+            Some(value) => value,
+            None => {
+                std::thread::sleep(Duration::from_millis(300));
+                continue;
+            }
+        };
+        let dispatched = client
+            .start_thread(app_server::ThreadStartParams {
+                cwd: workspace,
+                model: task.model.clone(),
+                effort: task.effort.clone(),
+                role: task.role.clone(),
+            })
+            .and_then(|thread| {
+                client.start_turn(app_server::TurnStartParams {
+                    thread_id: thread.thread_id,
+                    prompt,
+                    output_schema: autopilot::outcome_schema(),
+                })
+            });
+        let turn = match dispatched {
+            Ok(turn) => turn,
+            Err(error) => {
+                if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+                    if let Ok(mut controller) = state.lock() {
+                        let _ = controller.fail_dispatch_bound(&reserved, &error);
+                        let _ = handle.emit("autopilot-update", controller.snapshot());
+                    }
+                }
+                continue;
+            }
+        };
+        let attached = handle
+            .try_state::<Mutex<autopilot::AutopilotController>>()
+            .and_then(|state| {
+                state.lock().ok().and_then(|mut controller| {
+                    controller
+                        .attach_turn_bound(&reserved, &turn.thread_id, &turn.turn_id)
+                        .ok()
+                })
+            });
+        let Some(attached) = attached else {
+            if client.interrupt(&turn.thread_id, &turn.turn_id).is_err() {
+                client.shutdown();
+                if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+                    if let Ok(mut controller) = state.lock() {
+                        controller.set_connection(false, "Codex App Server was stopped after an untracked dispatch could not be interrupted");
+                    }
+                }
+            }
+            continue;
+        };
+        if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+            if let Ok(controller) = state.lock() {
+                let _ = handle.emit("autopilot-update", controller.snapshot());
+            }
+        }
+        wait_for_managed_turn(handle.clone(), client.clone(), attached);
+    }
+    client.shutdown();
+}
+
 pub fn run() {
     let monitor = Monitor::new().expect("Monitor initialization failed");
-    let model_settings = settings::SettingsService::new().expect("Model settings initialization failed");
+    let model_settings =
+        settings::SettingsService::new().expect("Model settings initialization failed");
+    let autopilot =
+        autopilot::AutopilotController::new_default().expect("Autopilot initialization failed");
     tauri::Builder::default()
         .manage(Mutex::new(monitor))
         .manage(Mutex::new(model_settings))
+        .manage(Mutex::new(autopilot))
+        .manage(AutopilotRuntime {
+            client: Mutex::new(None),
+            control: Mutex::new(()),
+            stopping: AtomicBool::new(false),
+        })
         .invoke_handler(tauri::generate_handler![
             get_snapshot,
             query_activity,
             get_model_settings,
-            save_agent_model
+            save_agent_model,
+            get_autopilot_snapshot,
+            save_autopilot_plan,
+            approve_autopilot_plan,
+            start_autopilot,
+            pause_autopilot,
+            resume_autopilot,
+            cancel_autopilot,
+            respond_autopilot_gate,
+            respond_autopilot_request
         ])
         .setup(|app| {
             let handle = app.handle().clone();
@@ -1150,10 +1962,32 @@ pub fn run() {
                 }
                 std::thread::sleep(Duration::from_secs(2));
             });
+            let autopilot_handle = app.handle().clone();
+            std::thread::spawn(move || run_autopilot_worker(autopilot_handle));
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("Tauri application failed");
+        .build(tauri::generate_context!())
+        .expect("Tauri application failed")
+        .run(|handle, event| {
+            if matches!(
+                event,
+                tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit
+            ) {
+                if let Some(runtime) = handle.try_state::<AutopilotRuntime>() {
+                    runtime.stopping.store(true, Ordering::SeqCst);
+                    if let Ok(client) = runtime.client.lock() {
+                        if let Some(client) = client.as_ref() {
+                            client.shutdown();
+                        }
+                    }
+                }
+                if let Some(state) = handle.try_state::<Mutex<autopilot::AutopilotController>>() {
+                    if let Ok(mut controller) = state.lock() {
+                        let _ = controller.interrupt_for_shutdown();
+                    }
+                }
+            }
+        });
 }
 
 #[cfg(test)]
@@ -1165,58 +1999,165 @@ mod tests {
         let db = Connection::open_in_memory().unwrap();
         db.execute_batch("CREATE TABLE events (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, thread_id TEXT NOT NULL, role TEXT NOT NULL, kind TEXT NOT NULL, text TEXT NOT NULL, event_key TEXT UNIQUE)").unwrap();
         Monitor {
-            files: HashMap::new(), ignored: HashSet::new(), agents: HashMap::new(),
-            session_aliases: HashMap::new(), list_agent_calls: HashSet::new(), seen_token_records: HashSet::new(), agent_token_records: HashSet::new(), observed_input_tokens: 0, observed_output_tokens: 0, activity: vec![], db, next_id: 0, source_dir: PathBuf::new(),
+            files: HashMap::new(),
+            ignored: HashSet::new(),
+            agents: HashMap::new(),
+            session_aliases: HashMap::new(),
+            list_agent_calls: HashSet::new(),
+            seen_token_records: HashSet::new(),
+            agent_token_records: HashSet::new(),
+            observed_input_tokens: 0,
+            observed_output_tokens: 0,
+            activity: vec![],
+            db,
+            next_id: 0,
+            source_dir: PathBuf::new(),
         }
     }
 
     #[test]
     fn activity_query_is_team_scoped_paginated_and_escapes_literal_search() {
         let mut monitor = activity_monitor();
-        monitor.record("2026-10-07T00:00:00Z", "software-1", "Coder", "command", "100% ready");
-        monitor.record("2026-10-07T00:00:01Z", "research-1", "Paper Writer", "command", "100% research");
-        monitor.record("2026-10-07T00:00:02Z", "software-2", "Tester", "test", "100x ready");
-        monitor.record("2026-10-07T00:00:03Z", "software-3", "Coder", "command", "compile complete");
+        monitor.record(
+            "2026-10-07T00:00:00Z",
+            "software-1",
+            "Coder",
+            "command",
+            "100% ready",
+        );
+        monitor.record(
+            "2026-10-07T00:00:01Z",
+            "research-1",
+            "Paper Writer",
+            "command",
+            "100% research",
+        );
+        monitor.record(
+            "2026-10-07T00:00:02Z",
+            "software-2",
+            "Tester",
+            "test",
+            "100x ready",
+        );
+        monitor.record(
+            "2026-10-07T00:00:03Z",
+            "software-3",
+            "Coder",
+            "command",
+            "compile complete",
+        );
 
-        let first = monitor.query_activity(ActivityFilter { team: "software".into(), role: None, kind: None, query: None, before_id: None, limit: Some(2) }).unwrap();
-        assert_eq!(first.events.iter().map(|event| event.id).collect::<Vec<_>>(), vec![4, 3]);
+        let first = monitor
+            .query_activity(ActivityFilter {
+                team: "software".into(),
+                role: None,
+                kind: None,
+                query: None,
+                before_id: None,
+                limit: Some(2),
+            })
+            .unwrap();
+        assert_eq!(
+            first
+                .events
+                .iter()
+                .map(|event| event.id)
+                .collect::<Vec<_>>(),
+            vec![4, 3]
+        );
         assert!(first.has_more);
         assert_eq!(first.events[0].thread_id, "software-3");
 
-        let second = monitor.query_activity(ActivityFilter { team: "software".into(), role: None, kind: None, query: None, before_id: Some(3), limit: Some(2) }).unwrap();
-        assert_eq!(second.events.iter().map(|event| event.id).collect::<Vec<_>>(), vec![1]);
+        let second = monitor
+            .query_activity(ActivityFilter {
+                team: "software".into(),
+                role: None,
+                kind: None,
+                query: None,
+                before_id: Some(3),
+                limit: Some(2),
+            })
+            .unwrap();
+        assert_eq!(
+            second
+                .events
+                .iter()
+                .map(|event| event.id)
+                .collect::<Vec<_>>(),
+            vec![1]
+        );
         assert!(!second.has_more);
 
-        let literal = monitor.query_activity(ActivityFilter { team: "software".into(), role: Some("Coder".into()), kind: Some("command".into()), query: Some("100%".into()), before_id: None, limit: None }).unwrap();
+        let literal = monitor
+            .query_activity(ActivityFilter {
+                team: "software".into(),
+                role: Some("Coder".into()),
+                kind: Some("command".into()),
+                query: Some("100%".into()),
+                before_id: None,
+                limit: None,
+            })
+            .unwrap();
         assert_eq!(literal.events.len(), 1);
         assert_eq!(literal.events[0].text, "100% ready");
-        assert!(monitor.query_activity(ActivityFilter { team: "software".into(), role: Some("Paper Writer".into()), kind: None, query: None, before_id: None, limit: None }).is_err());
+        assert!(monitor
+            .query_activity(ActivityFilter {
+                team: "software".into(),
+                role: Some("Paper Writer".into()),
+                kind: None,
+                query: None,
+                before_id: None,
+                limit: None
+            })
+            .is_err());
     }
 
     #[test]
     fn activity_visible_thread_matches_workflow_card_for_rollout_file_context() {
         let mut monitor = activity_monitor();
-        monitor.ingest(&json!({
-            "type":"session_meta", "timestamp":"2026-10-07T00:00:00Z",
-            "_monitor_thread":"rollout-file-id",
-            "payload":{"id":"actual-session-id", "cwd":"C:/project", "agent_role":"coder"}
-        }).to_string());
-        monitor.ingest(&json!({
-            "type":"event_msg", "timestamp":"2026-10-07T00:00:01Z",
-            "_monitor_thread":"rollout-file-id", "payload":{"type":"task_started"}
-        }).to_string());
+        monitor.ingest(
+            &json!({
+                "type":"session_meta", "timestamp":"2026-10-07T00:00:00Z",
+                "_monitor_thread":"rollout-file-id",
+                "payload":{"id":"actual-session-id", "cwd":"C:/project", "agent_role":"coder"}
+            })
+            .to_string(),
+        );
+        monitor.ingest(
+            &json!({
+                "type":"event_msg", "timestamp":"2026-10-07T00:00:01Z",
+                "_monitor_thread":"rollout-file-id", "payload":{"type":"task_started"}
+            })
+            .to_string(),
+        );
 
         let snapshot = monitor.snapshot();
-        let card = snapshot.agents.into_iter().find(|agent| agent.role == "Coder").unwrap();
+        let card = snapshot
+            .agents
+            .into_iter()
+            .find(|agent| agent.role == "Coder")
+            .unwrap();
         assert_eq!(card.thread_id, "actual-session-id");
         assert!(!snapshot.activity.is_empty());
         assert!(snapshot
             .activity
             .iter()
             .all(|event| event.thread_id == "actual-session-id"));
-        let page = monitor.query_activity(ActivityFilter { team: "software".into(), role: Some("Coder".into()), kind: None, query: None, before_id: None, limit: None }).unwrap();
+        let page = monitor
+            .query_activity(ActivityFilter {
+                team: "software".into(),
+                role: Some("Coder".into()),
+                kind: None,
+                query: None,
+                before_id: None,
+                limit: None,
+            })
+            .unwrap();
         assert!(!page.events.is_empty());
-        assert!(page.events.iter().all(|event| event.thread_id == "actual-session-id"));
+        assert!(page
+            .events
+            .iter()
+            .all(|event| event.thread_id == "actual-session-id"));
     }
     #[test]
     fn roles_accept_current_and_legacy_metadata() {
@@ -1240,7 +2181,10 @@ mod tests {
         assert_eq!(normalize_role("mobile-dev"), "Mobile Dev");
         assert_eq!(normalize_role("mobile_dev"), "Mobile Dev");
         assert_eq!(normalize_role("academic_reviewer"), "Academic Reviewer");
-        assert_eq!(delegated_role(&json!({"task_name":"tester","agent_type":"coder"})), Some("Coder".into()));
+        assert_eq!(
+            delegated_role(&json!({"task_name":"tester","agent_type":"coder"})),
+            Some("Coder".into())
+        );
         assert!(!is_monitored_subagent(subagent_role(
             &json!({"source":{"subagent":{"other":"guardian"}}})
         )));
@@ -1343,8 +2287,19 @@ mod tests {
         let db = Connection::open_in_memory().unwrap();
         db.execute_batch("CREATE TABLE events (id INTEGER PRIMARY KEY, at TEXT, thread_id TEXT, role TEXT, kind TEXT, text TEXT, event_key TEXT UNIQUE)").unwrap();
         let mut m = Monitor {
-            files: HashMap::new(), ignored: HashSet::new(), agents: HashMap::new(),
-            session_aliases: HashMap::new(), list_agent_calls: HashSet::new(), seen_token_records: HashSet::new(), agent_token_records: HashSet::new(), observed_input_tokens: 0, observed_output_tokens: 0, activity: vec![], db, next_id: 0, source_dir: PathBuf::new(),
+            files: HashMap::new(),
+            ignored: HashSet::new(),
+            agents: HashMap::new(),
+            session_aliases: HashMap::new(),
+            list_agent_calls: HashSet::new(),
+            seen_token_records: HashSet::new(),
+            agent_token_records: HashSet::new(),
+            observed_input_tokens: 0,
+            observed_output_tokens: 0,
+            activity: vec![],
+            db,
+            next_id: 0,
+            source_dir: PathBuf::new(),
         };
         m.ingest(&json!({"type":"session_meta","timestamp":"2026-09-30T00:00:00Z","_monitor_thread":"root-file","payload":{"id":"root-session","cwd":"C:/project","source":"cli"}}).to_string());
         m.ingest(&json!({"type":"turn_context","timestamp":"2026-09-30T00:00:00Z","_monitor_thread":"root-file","payload":{"model":"child-model"}}).to_string());
@@ -1353,7 +2308,14 @@ mod tests {
         assert_eq!(m.agents.len(), 1);
         let planner = m.agents.get("root-file").unwrap();
         assert_eq!(planner.role, "Planner");
-        assert_eq!((&*planner.model, planner.input_tokens, planner.tokens_observed), ("", 0, false));
+        assert_eq!(
+            (
+                &*planner.model,
+                planner.input_tokens,
+                planner.tokens_observed
+            ),
+            ("", 0, false)
+        );
         let snapshot = m.snapshot();
         assert_eq!((snapshot.total_input, snapshot.total_output), (20, 5));
     }
@@ -1363,21 +2325,54 @@ mod tests {
         let db = Connection::open_in_memory().unwrap();
         db.execute_batch("CREATE TABLE events (id INTEGER PRIMARY KEY, at TEXT, thread_id TEXT, role TEXT, kind TEXT, text TEXT, event_key TEXT UNIQUE)").unwrap();
         let mut m = Monitor {
-            files: HashMap::new(), ignored: HashSet::new(), agents: HashMap::new(),
-            session_aliases: HashMap::new(), list_agent_calls: HashSet::new(), seen_token_records: HashSet::new(), agent_token_records: HashSet::new(), observed_input_tokens: 0, observed_output_tokens: 0, activity: vec![], db, next_id: 0, source_dir: PathBuf::new(),
+            files: HashMap::new(),
+            ignored: HashSet::new(),
+            agents: HashMap::new(),
+            session_aliases: HashMap::new(),
+            list_agent_calls: HashSet::new(),
+            seen_token_records: HashSet::new(),
+            agent_token_records: HashSet::new(),
+            observed_input_tokens: 0,
+            observed_output_tokens: 0,
+            activity: vec![],
+            db,
+            next_id: 0,
+            source_dir: PathBuf::new(),
         };
         m.ingest(&json!({"type":"session_meta","timestamp":"2026-09-30T00:00:00Z","_monitor_thread":"rollout-file-id","payload":{"id":"actual-session-id","cwd":"C:/project","agent_role":"coder"}}).to_string());
         m.ingest(&json!({"type":"token_usage_record","timestamp":"2026-09-30T00:00:01Z","_monitor_thread":"rollout-file-id","payload":{"thread_id":"actual-session-id","usage":{"input_tokens":12,"output_tokens":7}}}).to_string());
         let coder = m.agents.get("rollout-file-id").unwrap();
         assert_eq!((coder.input_tokens, coder.output_tokens), (12, 7));
-        m.record("2026-09-30T00:00:02Z", "actual-session-id", "Coder", "turn", "Turn started");
-        m.record("2026-09-30T00:00:02Z", "actual-session-id", "Coder", "turn", "Turn started");
-        assert_eq!(m.activity.iter().filter(|x| x.text == "Turn started").count(), 1);
+        m.record(
+            "2026-09-30T00:00:02Z",
+            "actual-session-id",
+            "Coder",
+            "turn",
+            "Turn started",
+        );
+        m.record(
+            "2026-09-30T00:00:02Z",
+            "actual-session-id",
+            "Coder",
+            "turn",
+            "Turn started",
+        );
+        assert_eq!(
+            m.activity
+                .iter()
+                .filter(|x| x.text == "Turn started")
+                .count(),
+            1
+        );
     }
 
     #[test]
     fn truncated_rollout_resets_session_before_replay() {
-        let root = std::env::temp_dir().join(format!("agent-control-center-test-{}-{}", std::process::id(), timestamp()));
+        let root = std::env::temp_dir().join(format!(
+            "agent-control-center-test-{}-{}",
+            std::process::id(),
+            timestamp()
+        ));
         fs::create_dir_all(&root).unwrap();
         let session = "11111111-1111-1111-1111-111111111111";
         let path = root.join(format!("rollout-{session}.jsonl"));
@@ -1388,25 +2383,49 @@ mod tests {
         let db = Connection::open_in_memory().unwrap();
         db.execute_batch("CREATE TABLE events (id INTEGER PRIMARY KEY, at TEXT, thread_id TEXT, role TEXT, kind TEXT, text TEXT, event_key TEXT UNIQUE)").unwrap();
         let mut m = Monitor {
-            files: HashMap::new(), ignored: HashSet::new(), agents: HashMap::new(),
-            session_aliases: HashMap::new(), list_agent_calls: HashSet::new(), seen_token_records: HashSet::new(), agent_token_records: HashSet::new(), observed_input_tokens: 0, observed_output_tokens: 0, activity: vec![], db, next_id: 0, source_dir: root.clone(),
+            files: HashMap::new(),
+            ignored: HashSet::new(),
+            agents: HashMap::new(),
+            session_aliases: HashMap::new(),
+            list_agent_calls: HashSet::new(),
+            seen_token_records: HashSet::new(),
+            agent_token_records: HashSet::new(),
+            observed_input_tokens: 0,
+            observed_output_tokens: 0,
+            activity: vec![],
+            db,
+            next_id: 0,
+            source_dir: root.clone(),
         };
         m.scan();
-        m.list_agent_calls.insert(format!("{session}\u{1f}stale-list-call"));
+        m.list_agent_calls
+            .insert(format!("{session}\u{1f}stale-list-call"));
         fs::write(&path, format!("{meta}\n{tokens}\n")).unwrap();
         m.scan();
         let agent = m.agents.get(session).unwrap();
         assert_eq!((agent.input_tokens, agent.output_tokens), (10, 4));
         assert!(m.list_agent_calls.is_empty());
-        m.agents.insert(format!("{session}::delegated::/root/coder"), AgentState {
-            team: "software".into(), role: "Coder".into(), parent_id: session.into(),
-            status: "waiting".into(), ..Default::default()
-        });
+        m.agents.insert(
+            format!("{session}::delegated::/root/coder"),
+            AgentState {
+                team: "software".into(),
+                role: "Coder".into(),
+                parent_id: session.into(),
+                status: "waiting".into(),
+                ..Default::default()
+            },
+        );
         m.ingest(&json!({
             "type":"response_item", "timestamp":"2026-09-30T00:00:03Z", "_monitor_thread":session,
             "payload":{"type":"function_call_output", "call_id":"stale-list-call", "output":"{\"agents\":[{\"agent_name\":\"/root/coder\",\"agent_status\":\"done\"}]}"}
         }).to_string());
-        assert_eq!(m.agents.get(&format!("{session}::delegated::/root/coder")).unwrap().status, "waiting");
+        assert_eq!(
+            m.agents
+                .get(&format!("{session}::delegated::/root/coder"))
+                .unwrap()
+                .status,
+            "waiting"
+        );
         fs::remove_dir_all(root).unwrap();
     }
 
@@ -1421,13 +2440,25 @@ mod tests {
         let db_path = root.join("history.sqlite3");
         {
             let mut first = Monitor::open(root.join("sessions"), db_path.clone()).unwrap();
-            first.record("2026-09-30T00:00:00Z", "thread-1", "Coder", "turn", "Turn started");
+            first.record(
+                "2026-09-30T00:00:00Z",
+                "thread-1",
+                "Coder",
+                "turn",
+                "Turn started",
+            );
             assert_eq!(first.activity.len(), 1);
         }
         let mut reopened = Monitor::open(root.join("sessions"), db_path).unwrap();
         assert_eq!(reopened.activity.len(), 1);
         assert_eq!(reopened.activity[0].text, "Turn started");
-        reopened.record("2026-09-30T00:00:00Z", "thread-1", "Coder", "turn", "Turn started");
+        reopened.record(
+            "2026-09-30T00:00:00Z",
+            "thread-1",
+            "Coder",
+            "turn",
+            "Turn started",
+        );
         assert_eq!(reopened.activity.len(), 1);
         drop(reopened);
         fs::remove_dir_all(root).unwrap();
@@ -1441,7 +2472,9 @@ mod tests {
         let tracked = HashMap::from([(paths[0].clone(), 42)]);
         let selected = paths_to_scan(paths, &tracked);
         assert_eq!(selected.len(), 81);
-        assert!(selected.iter().any(|path| path == &PathBuf::from("rollout-000.jsonl")));
+        assert!(selected
+            .iter()
+            .any(|path| path == &PathBuf::from("rollout-000.jsonl")));
     }
 
     #[test]
@@ -1449,22 +2482,49 @@ mod tests {
         let db = Connection::open_in_memory().unwrap();
         db.execute_batch("CREATE TABLE events (id INTEGER PRIMARY KEY, at TEXT, thread_id TEXT, role TEXT, kind TEXT, text TEXT, event_key TEXT UNIQUE)").unwrap();
         let mut m = Monitor {
-            files: HashMap::new(), ignored: HashSet::new(), agents: HashMap::new(),
-            session_aliases: HashMap::new(), list_agent_calls: HashSet::new(), seen_token_records: HashSet::new(), agent_token_records: HashSet::new(), observed_input_tokens: 0, observed_output_tokens: 0, activity: vec![], db, next_id: 0, source_dir: PathBuf::new(),
+            files: HashMap::new(),
+            ignored: HashSet::new(),
+            agents: HashMap::new(),
+            session_aliases: HashMap::new(),
+            list_agent_calls: HashSet::new(),
+            seen_token_records: HashSet::new(),
+            agent_token_records: HashSet::new(),
+            observed_input_tokens: 0,
+            observed_output_tokens: 0,
+            activity: vec![],
+            db,
+            next_id: 0,
+            source_dir: PathBuf::new(),
         };
         m.ingest(&json!({"type":"session_meta","timestamp":"2026-09-30T00:00:00Z","_monitor_thread":"planner-file","payload":{"id":"planner-session","cwd":"C:/project","source":"cli"}}).to_string());
         m.ingest(&json!({
             "type":"response_item", "timestamp":"2026-09-30T00:00:01Z", "_monitor_thread":"planner-file",
             "payload":{"type":"function_call","name":"spawn_agent","arguments":"{\"task_name\":\"/root/model_backend\",\"agent_type\":\"coder\",\"message\":\"gAAAAEncryptedLocalBlob\"}"}
         }).to_string());
-        let coder = m.agents.get("planner-file::delegated::/root/model_backend").unwrap();
-        assert_eq!((&*coder.role, &*coder.status, &*coder.task), ("Coder", "waiting", "Task text unavailable in local log"));
+        let coder = m
+            .agents
+            .get("planner-file::delegated::/root/model_backend")
+            .unwrap();
+        assert_eq!(
+            (&*coder.role, &*coder.status, &*coder.task),
+            ("Coder", "waiting", "Task text unavailable in local log")
+        );
+        assert_eq!(
+            (&*coder.status_observed_at, &*coder.status_source),
+            ("2026-09-30T00:00:01Z", "delegation")
+        );
         assert_eq!(coder.workspace, "C:/project");
         m.ingest(&json!({
             "type":"response_item", "timestamp":"2026-09-30T00:00:02Z", "_monitor_thread":"planner-file",
             "payload":{"type":"function_call_output","call_id":"unrelated","output":"{\"agents\":[{\"agent_name\":\"/root/model_backend\",\"agent_status\":{\"completed\":\"completed\"}}]}"}
         }).to_string());
-        assert_eq!(m.agents.get("planner-file::delegated::/root/model_backend").unwrap().status, "waiting");
+        assert_eq!(
+            m.agents
+                .get("planner-file::delegated::/root/model_backend")
+                .unwrap()
+                .status,
+            "waiting"
+        );
         m.ingest(&json!({
             "type":"response_item", "timestamp":"2026-09-30T00:00:03Z", "_monitor_thread":"planner-file",
             "payload":{"type":"function_call","name":"list_agents","call_id":"agents-1","arguments":"{}"}
@@ -1473,13 +2533,115 @@ mod tests {
             "type":"response_item", "timestamp":"2026-09-30T00:00:04Z", "_monitor_thread":"planner-file",
             "payload":{"type":"function_call_output","call_id":"agents-1","output":"{\"agents\":[{\"agent_name\":\"/root/model_backend\",\"agent_status\":{\"completed\":\"completed\"}}]}"}
         }).to_string());
-        assert_eq!(m.agents.get("planner-file::delegated::/root/model_backend").unwrap().status, "done");
+        assert_eq!(
+            m.agents
+                .get("planner-file::delegated::/root/model_backend")
+                .unwrap()
+                .status,
+            "done"
+        );
+        assert_eq!(
+            m.agents
+                .get("planner-file::delegated::/root/model_backend")
+                .unwrap()
+                .status_source,
+            "list_agents"
+        );
         m.ingest(&json!({
             "type":"response_item", "timestamp":"2026-09-30T00:00:05Z", "_monitor_thread":"planner-file",
             "payload":{"type":"function_call","name":"followup_task","arguments":"{\"target\":\"/root/model_backend\",\"message\":\"retry\"}"}
         }).to_string());
-        let coder = m.agents.get("planner-file::delegated::/root/model_backend").unwrap();
-        assert_eq!((&*coder.status, &*coder.started_at), ("waiting", "2026-09-30T00:00:05Z"));
+        let coder = m
+            .agents
+            .get("planner-file::delegated::/root/model_backend")
+            .unwrap();
+        assert_eq!(
+            (&*coder.status, &*coder.started_at),
+            ("waiting", "2026-09-30T00:00:05Z")
+        );
+    }
+
+    #[test]
+    fn older_lifecycle_observation_cannot_replace_newer_completion() {
+        let mut agent = AgentState::default();
+        assert!(observe_status(
+            &mut agent,
+            "done",
+            "2026-10-01T00:02:00Z",
+            "list_agents"
+        ));
+        assert!(!observe_status(
+            &mut agent,
+            "working",
+            "2026-10-01T00:01:00Z",
+            "turn"
+        ));
+        assert_eq!(
+            (
+                &*agent.status,
+                &*agent.status_observed_at,
+                &*agent.status_source
+            ),
+            ("done", "2026-10-01T00:02:00Z", "list_agents")
+        );
+    }
+
+    #[test]
+    fn lifecycle_ordering_compares_rfc3339_offsets_as_instants() {
+        let mut agent = AgentState::default();
+        assert!(observe_status(
+            &mut agent,
+            "done",
+            "2026-10-01T00:30:00Z",
+            "turn"
+        ));
+        assert!(!observe_status(
+            &mut agent,
+            "working",
+            "2026-10-01T01:00:00+02:00",
+            "list_agents"
+        ));
+        assert_eq!(agent.status, "done");
+    }
+
+    #[test]
+    fn ordinary_activity_does_not_refresh_lifecycle_evidence() {
+        let mut agent = AgentState::default();
+        assert!(observe_status(
+            &mut agent,
+            "working",
+            "2026-10-01T00:01:00Z",
+            "turn"
+        ));
+        observe_activity(&mut agent, "2026-10-01T00:03:00Z");
+        assert_eq!(agent.updated_at, "2026-10-01T00:03:00Z");
+        assert_eq!(agent.status_observed_at, "2026-10-01T00:01:00Z");
+    }
+
+    #[test]
+    fn status_without_a_source_timestamp_is_not_treated_as_fresh_evidence() {
+        let mut agent = AgentState {
+            status: "idle".into(),
+            ..Default::default()
+        };
+        assert!(!observe_status(&mut agent, "working", "", "turn"));
+        assert_eq!(agent.status, "idle");
+        assert!(agent.status_observed_at.is_empty());
+        assert!(agent.status_source.is_empty());
+    }
+
+    #[test]
+    fn placeholder_card_has_no_fabricated_status_evidence() {
+        let m = activity_monitor();
+        let coder = m
+            .snapshot()
+            .agents
+            .into_iter()
+            .find(|a| a.role == "Coder")
+            .unwrap();
+        assert_eq!(coder.status, "idle");
+        assert!(coder.status_observed_at.is_empty());
+        assert!(coder.status_source.is_empty());
     }
 
     #[test]
@@ -1487,29 +2649,125 @@ mod tests {
         let db = Connection::open_in_memory().unwrap();
         db.execute_batch("CREATE TABLE events (id INTEGER PRIMARY KEY, at TEXT, thread_id TEXT, role TEXT, kind TEXT, text TEXT, event_key TEXT UNIQUE)").unwrap();
         let mut m = Monitor {
-            files: HashMap::new(), ignored: HashSet::new(), agents: HashMap::new(),
-            session_aliases: HashMap::new(), list_agent_calls: HashSet::new(), seen_token_records: HashSet::new(), agent_token_records: HashSet::new(), observed_input_tokens: 0, observed_output_tokens: 0, activity: vec![], db, next_id: 0, source_dir: PathBuf::new(),
+            files: HashMap::new(),
+            ignored: HashSet::new(),
+            agents: HashMap::new(),
+            session_aliases: HashMap::new(),
+            list_agent_calls: HashSet::new(),
+            seen_token_records: HashSet::new(),
+            agent_token_records: HashSet::new(),
+            observed_input_tokens: 0,
+            observed_output_tokens: 0,
+            activity: vec![],
+            db,
+            next_id: 0,
+            source_dir: PathBuf::new(),
         };
-        m.agents.insert("explicit".into(), AgentState { team:"software".into(), role:"Coder".into(), thread_id:"coder-session".into(), updated_at:"2026-09-30T00:00:00Z".into(), status:"done".into(), ..Default::default() });
-        m.agents.insert("fallback".into(), AgentState { team:"software".into(), role:"Coder".into(), updated_at:"2026-09-30T00:01:00Z".into(), status:"waiting".into(), ..Default::default() });
-        let coder = m.snapshot().agents.into_iter().find(|a| a.role == "Coder").unwrap();
+        m.agents.insert(
+            "explicit".into(),
+            AgentState {
+                team: "software".into(),
+                role: "Coder".into(),
+                thread_id: "coder-session".into(),
+                updated_at: "2026-09-30T00:00:00Z".into(),
+                status: "done".into(),
+                ..Default::default()
+            },
+        );
+        m.agents.insert(
+            "fallback".into(),
+            AgentState {
+                team: "software".into(),
+                role: "Coder".into(),
+                updated_at: "2026-09-30T00:01:00Z".into(),
+                status: "waiting".into(),
+                ..Default::default()
+            },
+        );
+        let coder = m
+            .snapshot()
+            .agents
+            .into_iter()
+            .find(|a| a.role == "Coder")
+            .unwrap();
         assert_eq!(coder.thread_id, "");
+    }
+
+    #[test]
+    fn direct_child_completion_beats_stale_parent_list_observation() {
+        let mut m = activity_monitor();
+        m.agents.insert(
+            "parent::delegated::/root/coder".into(),
+            AgentState {
+                team: "software".into(),
+                role: "Coder".into(),
+                parent_id: "parent".into(),
+                // Later non-lifecycle activity must not make this old working snapshot
+                // supersede a newer direct completion.
+                status: "working".into(),
+                updated_at: "2026-10-01T00:45:00Z".into(),
+                status_observed_at: "2026-10-01T01:00:00+02:00".into(),
+                status_source: "list_agents".into(),
+                ..Default::default()
+            },
+        );
+        m.agents.insert(
+            "coder-session".into(),
+            AgentState {
+                team: "software".into(),
+                role: "Coder".into(),
+                thread_id: "coder-session".into(),
+                status: "done".into(),
+                updated_at: "2026-10-01T00:30:00Z".into(),
+                status_observed_at: "2026-10-01T00:30:00Z".into(),
+                status_source: "turn".into(),
+                ..Default::default()
+            },
+        );
+        let coder = m
+            .snapshot()
+            .agents
+            .into_iter()
+            .find(|a| a.role == "Coder")
+            .unwrap();
+        assert_eq!(
+            (&*coder.status, &*coder.thread_id),
+            ("done", "coder-session")
+        );
+        assert_eq!(coder.status_source, "turn");
     }
 
     #[test]
     fn newest_delegated_cohort_beats_stale_working_parent() {
         let mut m = activity_monitor();
-        m.agents.insert("parent-a::delegated::/root/old".into(), AgentState {
-            team: "software".into(), role: "Coder".into(), parent_id: "parent-a".into(),
-            status: "working".into(), updated_at: "2026-10-01T00:00:00Z".into(),
-            ..Default::default()
-        });
-        m.agents.insert("parent-b::delegated::/root/new".into(), AgentState {
-            team: "software".into(), role: "Coder".into(), parent_id: "parent-b".into(),
-            status: "done".into(), updated_at: "2026-10-01T00:01:00Z".into(),
-            ..Default::default()
-        });
-        let coder = m.snapshot().agents.into_iter().find(|a| a.role == "Coder").unwrap();
+        m.agents.insert(
+            "parent-a::delegated::/root/old".into(),
+            AgentState {
+                team: "software".into(),
+                role: "Coder".into(),
+                parent_id: "parent-a".into(),
+                status: "working".into(),
+                updated_at: "2026-10-01T00:00:00Z".into(),
+                ..Default::default()
+            },
+        );
+        m.agents.insert(
+            "parent-b::delegated::/root/new".into(),
+            AgentState {
+                team: "software".into(),
+                role: "Coder".into(),
+                parent_id: "parent-b".into(),
+                status: "done".into(),
+                updated_at: "2026-10-01T00:01:00Z".into(),
+                ..Default::default()
+            },
+        );
+        let coder = m
+            .snapshot()
+            .agents
+            .into_iter()
+            .find(|a| a.role == "Coder")
+            .unwrap();
         assert_eq!(coder.status, "done");
         assert_eq!(coder.parent_id, "parent-b");
     }
@@ -1521,14 +2779,29 @@ mod tests {
             ("/root/done", "done", "2026-10-01T00:01:01Z"),
             ("/root/working", "working", "2026-10-01T00:01:00Z"),
         ] {
-            m.agents.insert(format!("parent-b::delegated::{identity}"), AgentState {
-                team: "software".into(), role: "Coder".into(), parent_id: "parent-b".into(),
-                status: status.into(), updated_at: at.into(), ..Default::default()
-            });
+            m.agents.insert(
+                format!("parent-b::delegated::{identity}"),
+                AgentState {
+                    team: "software".into(),
+                    role: "Coder".into(),
+                    parent_id: "parent-b".into(),
+                    status: status.into(),
+                    updated_at: at.into(),
+                    status_observed_at: at.into(),
+                    status_source: "list_agents".into(),
+                    ..Default::default()
+                },
+            );
         }
-        let coder = m.snapshot().agents.into_iter().find(|a| a.role == "Coder").unwrap();
+        let coder = m
+            .snapshot()
+            .agents
+            .into_iter()
+            .find(|a| a.role == "Coder")
+            .unwrap();
         assert_eq!(coder.status, "working");
         assert!(coder.detail.starts_with("1 working / 2 observed tasks"));
+        assert_eq!(coder.status_observed_at, "2026-10-01T00:01:00Z");
     }
 
     #[test]
@@ -1536,18 +2809,38 @@ mod tests {
         let db = Connection::open_in_memory().unwrap();
         db.execute_batch("CREATE TABLE events (id INTEGER PRIMARY KEY, at TEXT, thread_id TEXT, role TEXT, kind TEXT, text TEXT, event_key TEXT UNIQUE)").unwrap();
         let mut m = Monitor {
-            files: HashMap::new(), ignored: HashSet::new(), agents: HashMap::new(),
-            session_aliases: HashMap::new(), list_agent_calls: HashSet::new(), seen_token_records: HashSet::new(), agent_token_records: HashSet::new(), observed_input_tokens: 0, observed_output_tokens: 0, activity: vec![], db, next_id: 0, source_dir: PathBuf::new(),
+            files: HashMap::new(),
+            ignored: HashSet::new(),
+            agents: HashMap::new(),
+            session_aliases: HashMap::new(),
+            list_agent_calls: HashSet::new(),
+            seen_token_records: HashSet::new(),
+            agent_token_records: HashSet::new(),
+            observed_input_tokens: 0,
+            observed_output_tokens: 0,
+            activity: vec![],
+            db,
+            next_id: 0,
+            source_dir: PathBuf::new(),
         };
         m.ingest(&json!({"type":"session_meta","timestamp":"2026-09-30T00:00:00Z","_monitor_thread":"coder-file","payload":{"id":"coder-session","cwd":"C:/project","agent_role":"coder"}}).to_string());
-        for (at, input, output) in [("2026-09-30T00:00:01Z", 10, 2), ("2026-09-30T00:00:02Z", 15, 3)] {
+        for (at, input, output) in [
+            ("2026-09-30T00:00:01Z", 10, 2),
+            ("2026-09-30T00:00:02Z", 15, 3),
+        ] {
             let record = json!({"type":"token_usage_record","timestamp":at,"_monitor_thread":"coder-file","payload":{"session_id":"coder-session","turn_id":"one-turn","usage":{"input_tokens":input,"output_tokens":output}}}).to_string();
             m.ingest(&record);
-            if input == 10 { m.ingest(&record); }
+            if input == 10 {
+                m.ingest(&record);
+            }
         }
         let snapshot = m.snapshot();
         assert_eq!((snapshot.total_input, snapshot.total_output), (25, 5));
-        let coder = snapshot.agents.into_iter().find(|a| a.role == "Coder").unwrap();
+        let coder = snapshot
+            .agents
+            .into_iter()
+            .find(|a| a.role == "Coder")
+            .unwrap();
         assert_eq!((coder.input_tokens, coder.output_tokens), (25, 5));
     }
 }

@@ -4,3 +4,81 @@
 .flow-branch{display:flex;flex-direction:column;gap:18px}.software-cards{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
 .nav-button{width:100%;border:0;background:transparent;text-align:left;cursor:pointer}.nav-button:hover{background:var(--surface2);color:var(--text)}
 .last-observed{margin-top:8px;color:var(--faint);font:600 9px 'Space Grotesk';letter-spacing:.03em}
+
+/* App shell: keep navigation stationary while each workspace scrolls independently. */
+html,body,#root{height:100%;overflow:hidden}
+body{background:#0a0e18}
+.app{height:100%;min-height:0;overflow:hidden;transition:background-color .18s ease,color .18s ease}
+.app.light{color-scheme:light}
+.app.dark{color-scheme:dark}
+.sidebar{height:100%;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;transition:width .2s ease,padding .2s ease;position:relative;z-index:20}
+.brand{position:relative;min-width:0}
+.brandmark{flex:none}
+.brand-copy{min-width:0;white-space:nowrap}
+.sidebar-toggle{margin-left:auto;width:30px;height:30px;flex:none;display:grid;place-items:center;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--muted);cursor:pointer}
+.sidebar-toggle:hover,.icon-btn:hover{color:var(--text);border-color:var(--accent)}
+.team-nav svg,.nav svg{flex:none}
+.team-nav span,.nav-copy{min-width:0;white-space:nowrap}
+.app main{height:100%;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.topbar{flex:none;min-width:0}
+.topbar-start{display:flex;align-items:center;gap:12px;min-width:0}
+.menu-button{flex:none}
+.crumb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.content{width:100%;min-width:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;flex:1}
+.content>*{min-width:0}
+.workflow-page,.activity-page,.autopilot-page,.model-settings{width:100%;min-width:0}
+.panel,.metric,.agent-card,.research-strip>div,.model-role-card,.managed-task{min-width:0}
+input,select,textarea{max-width:100%;min-width:0}
+.log-text,.workflow-event p,.managed-event p,.activity-detail span{overflow-wrap:anywhere}
+
+/* Compact rail keeps every destination available without consuming workspace width. */
+.app.sidebar-collapsed .sidebar{width:72px;padding-left:10px;padding-right:10px}
+.app.sidebar-collapsed .brand{padding:0 7px 38px;justify-content:center}
+.app.sidebar-collapsed .brand-copy,.app.sidebar-collapsed .sidebar-toggle,.app.sidebar-collapsed .side-label,.app.sidebar-collapsed .team-nav span,.app.sidebar-collapsed .nav-copy,.app.sidebar-collapsed .source-box,.app.sidebar-collapsed .sidebar-foot{display:none}
+.app.sidebar-collapsed .team-nav,.app.sidebar-collapsed .nav{justify-content:center;padding-left:0;padding-right:0;gap:0}
+.app.sidebar-collapsed .nav-active-dot{position:absolute;right:5px;margin:0}
+.app.sidebar-collapsed .nav{position:relative}
+.app.sidebar-collapsed .side-spacer{min-height:12px}
+
+/* Light theme covers semantic states and surfaces used by every page. */
+.app.light{--bg:#f4f7fb;--side:#ffffff;--surface:#ffffff;--surface2:#f1f5f9;--border:#d8e1ec;--text:#172235;--muted:#61718a;--faint:#7f8da2;--accent:#14795d;--accentbg:#dcf4e9}
+.light .brandmark{background:#e3f5ee;border-color:#8bc7b2}
+.light .team-nav.active{border-color:#91c6b4}
+.light .section-index{border-color:#8fc4b2}
+.light .role-0{color:#6e5cc4;background:#eeeaff}.light .role-1{color:#286eaa;background:#e4f2fd}.light .role-2{color:#14795d;background:#dff5ec}.light .role-3{color:#a25b19;background:#fff0df}.light .role-4{color:#a9437b;background:#fbe8f3}.light .role-5{color:#716816;background:#f7f3ce}.light .role-6{color:#25778f;background:#def2f8}
+.light .badge{background:#e8edf3;color:#586a82}.light .badge.working{background:#d9f3e8;color:#14795d}.light .badge.done{background:#e1effc;color:#286eaa}.light .badge.failed,.light .badge.blocked{background:#fde5e7;color:#b63d48}.light .badge.waiting{background:#fff0d5;color:#8b611b}
+.light .settings-warning{background:#fff7e5;color:#8b611b}.light .cancelling-note{background:#fff8e8}.light .unsupported-request{background:#fff1f1;color:#b63d48}
+.light .workflow-role.waiting span,.light .role-warning,.light .plan-status.needsInput,.light .plan-status.paused,.light .plan-status.cancelling,.light .managed-status.needsInput,.light .validation,.light .cancelling-note{color:#8b611b}
+.light .workflow-role.failed span,.light .workflow-role.blocked span,.light .activity-error,.light .plan-status.failed,.light .plan-status.cancelled,.light .managed-status.failed,.light .run-controls .danger,.light .save-result.error{color:#b63d48}
+.light .plan-status.running,.light .managed-status.running{color:#286eaa}
+.light .start-button,.light .save-model{color:#fff}
+.app ::selection{background:var(--accentbg);color:var(--text)}
+.app *{scrollbar-color:var(--border) transparent}
+
+@media(max-width:900px){
+  .topbar{padding:0 24px}.content{padding-left:24px;padding-right:24px}
+  .lower{grid-template-columns:1fr}
+}
+
+/* A stale status remains visible as history without appearing live. */
+.badge.stale,.badge.unknown{background:var(--surface2);color:var(--faint);border:1px solid var(--border)}
+.flow-step.stale .flow-icon,.flow-step.unknown .flow-icon{color:var(--faint);border-style:dashed}
+.flow-step.stale span,.flow-step.unknown span{color:var(--faint)}
+.log-text b{color:var(--text);font-size:9px}
+.light .badge.stale,.light .badge.unknown{background:#f5f7fa;color:#748196}
+@media(max-width:760px){
+  .sidebar{display:flex;position:fixed;inset:0 auto 0 0;width:min(280px,calc(100vw - 52px));box-shadow:12px 0 32px #0007;transform:translateX(0);transition:transform .2s ease,width .2s ease}
+  .app.sidebar-collapsed .sidebar{width:min(280px,calc(100vw - 52px));padding:28px 17px 17px;transform:translateX(-100%)}
+  .app.sidebar-collapsed .brand-copy,.app.sidebar-collapsed .sidebar-toggle,.app.sidebar-collapsed .side-label,.app.sidebar-collapsed .team-nav span,.app.sidebar-collapsed .nav-copy,.app.sidebar-collapsed .source-box,.app.sidebar-collapsed .sidebar-foot{display:initial}
+  .app.sidebar-collapsed .brand{padding:0 11px 44px;justify-content:flex-start}.app.sidebar-collapsed .sidebar-toggle{display:grid}.app.sidebar-collapsed .team-nav,.app.sidebar-collapsed .nav{justify-content:flex-start;padding:11px 13px;gap:12px}.app.sidebar-collapsed .nav-active-dot{position:static;margin-left:auto}
+  .topbar{padding:0 18px}.content{padding:25px 18px 20px}.live{display:none}
+  .heading{align-items:flex-start}.section-title{align-items:flex-start;gap:10px}.section-title>span{text-align:right}
+  .cards,.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:620px){
+  .cards,.metrics{grid-template-columns:1fr}.heading{display:block}.updated{margin-top:14px}
+  .top-actions{gap:8px}.crumb>span,.crumb>strong{display:none}
+  .section-title{display:block}.section-title>span{display:block;text-align:left;margin-top:7px}
+  .log-controls{flex-wrap:wrap}.log-controls .search{flex-basis:100%}.log-controls select{height:32px;flex:1}
+  .card-foot{gap:8px;flex-wrap:wrap}
+}

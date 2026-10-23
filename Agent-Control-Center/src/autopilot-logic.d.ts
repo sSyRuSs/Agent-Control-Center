@@ -1,0 +1,14 @@
+import type { AutopilotPlan, PlanInput, PlanTask } from './AutopilotPage';
+export const taskRoles: readonly string[];
+export function createSoftwareTemplate(objective?: string): PlanTask[];
+export function parseDependencies(value: string): string[];
+export function validateAutopilotInput(input: PlanInput): string[];
+export function allowedPlanActions(plan: AutopilotPlan | null, busy?: boolean): Record<'save'|'approve'|'start'|'pause'|'resume'|'cancel', boolean>;
+export function runtimeSeconds(task: PlanTask, nowSeconds?: number): number;
+export function formatDuration(seconds: number): string;
+export function humanRequestKind(method: string): 'command'|'file'|'permissions'|'questions'|'elicitation'|'unsupported';
+export function buildQuestionAnswers(questions: Array<{id?:unknown}>, values: Record<string,string>): Record<string,{answers:string[]}>;
+export function humanRequestIdentity(planRevision:number, taskId:string, request:{requestId:unknown;threadId?:string|null;turnId?:string|null}):string;
+export type GateAction = 'approve'|'retry'|'continue'|'reject';
+export function structuredGateActions(role:string):Array<{action:GateAction;label:string}>;
+export function buildGateInvocation(planId:string,taskId:string,response:string,action:GateAction):{command:'respond_autopilot_gate';args:{planId:string;taskId:string;response:string;approve:boolean;retry:boolean}};

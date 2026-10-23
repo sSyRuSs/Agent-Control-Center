@@ -1,0 +1,3646 @@
+{
+  "plan": {
+    "planId": "plan-1792290703-3524",
+    "title": "Software delivery plan",
+    "objective": "cải thiện UI là deploy lên site của chatGPT",
+    "workspace": "E:\\Eat-clean-web",
+    "limits": {
+      "maxAttempts": 2,
+      "maxRuntimeMinutes": 120,
+      "maxTokens": 100000,
+      "maxParallel": 1
+    },
+    "tasks": [
+      {
+        "id": "plan",
+        "title": "Plan implementation",
+        "description": "Turn this requirement into an implementation plan: cải thiện UI là deploy lên site của chatGPT",
+        "role": "planner",
+        "dependencies": [],
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "status": "failed",
+        "attempts": 1,
+        "threadId": "01a14cdb-df35-7b33-9f05-d7ef56ca67b8",
+        "turnId": "01a14cdb-dff9-7032-998e-f4b13fca6e36",
+        "summary": "oke",
+        "inputTokens": 24486,
+        "outputTokens": 510,
+        "activeInputTokens": 24486,
+        "activeOutputTokens": 510,
+        "startedAt": 1792290839,
+        "finishedAt": 1792290925,
+        "feedback": "",
+        "humanRequests": []
+      },
+      {
+        "id": "implement",
+        "title": "Implement changes",
+        "description": "cải thiện UI là deploy lên site của chatGPT",
+        "role": "coder",
+        "dependencies": [
+          "plan"
+        ],
+        "model": "gpt-5.6-sol",
+        "effort": "medium",
+        "status": "pending",
+        "attempts": 0,
+        "threadId": "",
+        "turnId": "",
+        "summary": "",
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "activeInputTokens": 0,
+        "activeOutputTokens": 0,
+        "startedAt": null,
+        "finishedAt": null,
+        "feedback": "",
+        "humanRequests": []
+      },
+      {
+        "id": "test",
+        "title": "Verify implementation",
+        "description": "Run the relevant checks and report evidence.",
+        "role": "tester",
+        "dependencies": [
+          "implement"
+        ],
+        "model": "gpt-5.6-luna",
+        "effort": "low",
+        "status": "pending",
+        "attempts": 0,
+        "threadId": "",
+        "turnId": "",
+        "summary": "",
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "activeInputTokens": 0,
+        "activeOutputTokens": 0,
+        "startedAt": null,
+        "finishedAt": null,
+        "feedback": "",
+        "humanRequests": []
+      },
+      {
+        "id": "review",
+        "title": "Independent review",
+        "description": "Review correctness, regressions, security risks, and missing tests.",
+        "role": "reviewer",
+        "dependencies": [
+          "test"
+        ],
+        "model": "gpt-5.6-terra",
+        "effort": "high",
+        "status": "pending",
+        "attempts": 0,
+        "threadId": "",
+        "turnId": "",
+        "summary": "",
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "activeInputTokens": 0,
+        "activeOutputTokens": 0,
+        "startedAt": null,
+        "finishedAt": null,
+        "feedback": "",
+        "humanRequests": []
+      },
+      {
+        "id": "human-review",
+        "title": "Human final review",
+        "description": "Review the completed work and decide whether to accept it.",
+        "role": "human",
+        "dependencies": [
+          "review"
+        ],
+        "model": null,
+        "effort": null,
+        "status": "pending",
+        "attempts": 0,
+        "threadId": "",
+        "turnId": "",
+        "summary": "",
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "activeInputTokens": 0,
+        "activeOutputTokens": 0,
+        "startedAt": null,
+        "finishedAt": null,
+        "feedback": "",
+        "humanRequests": []
+      }
+    ],
+    "revision": 2,
+    "approvedRevision": 2,
+    "status": "failed",
+    "createdAt": 1792290703,
+    "updatedAt": 1792290925,
+    "totalInputTokens": 24486,
+    "totalOutputTokens": 510,
+    "runStartedAt": 1792290839,
+    "pauseRequested": false
+  },
+  "events": [
+    {
+      "id": 223,
+      "at": 1792290859,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/commandExecution/outputDelta"
+    },
+    {
+      "id": 224,
+      "at": 1792290859,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/commandExecution/outputDelta"
+    },
+    {
+      "id": 225,
+      "at": 1792290859,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/commandExecution/outputDelta"
+    },
+    {
+      "id": 226,
+      "at": 1792290859,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/commandExecution/outputDelta"
+    },
+    {
+      "id": 227,
+      "at": 1792290859,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/commandExecution/outputDelta"
+    },
+    {
+      "id": 228,
+      "at": 1792290859,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/commandExecution/outputDelta"
+    },
+    {
+      "id": 229,
+      "at": 1792290859,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/commandExecution/outputDelta"
+    },
+    {
+      "id": 230,
+      "at": 1792290859,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/commandExecution/outputDelta"
+    },
+    {
+      "id": 231,
+      "at": 1792290859,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/commandExecution/outputDelta"
+    },
+    {
+      "id": 232,
+      "at": 1792290861,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/started"
+    },
+    {
+      "id": 233,
+      "at": 1792290861,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 234,
+      "at": 1792290861,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 235,
+      "at": 1792290861,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 236,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 237,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 238,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 239,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 240,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 241,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 242,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 243,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 244,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 245,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 246,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 247,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 248,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 249,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 250,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 251,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 252,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 253,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 254,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 255,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 256,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 257,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 258,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 259,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 260,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 261,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 262,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 263,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 264,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 265,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 266,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 267,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 268,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 269,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 270,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 271,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 272,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 273,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 274,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 275,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 276,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 277,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 278,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 279,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 280,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 281,
+      "at": 1792290862,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 282,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 283,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 284,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 285,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 286,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 287,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 288,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 289,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 290,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 291,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 292,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 293,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 294,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 295,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 296,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 297,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 298,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 299,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 300,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 301,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 302,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 303,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 304,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 305,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 306,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 307,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 308,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 309,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 310,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 311,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 312,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 313,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 314,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 315,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 316,
+      "at": 1792290863,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 317,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 318,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 319,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 320,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 321,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 322,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 323,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 324,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 325,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 326,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 327,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 328,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 329,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 330,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 331,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 332,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 333,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 334,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 335,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 336,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 337,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 338,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 339,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 340,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 341,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 342,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 343,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 344,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 345,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 346,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 347,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 348,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 349,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 350,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 351,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 352,
+      "at": 1792290864,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 353,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 354,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 355,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 356,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 357,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 358,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 359,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 360,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 361,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 362,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 363,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 364,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 365,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 366,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 367,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 368,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 369,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 370,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 371,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 372,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 373,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 374,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 375,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 376,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 377,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 378,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 379,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 380,
+      "at": 1792290865,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 381,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 382,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 383,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 384,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 385,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 386,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 387,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 388,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 389,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 390,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 391,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 392,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 393,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 394,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 395,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 396,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 397,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 398,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 399,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 400,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 401,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 402,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 403,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 404,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 405,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 406,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 407,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 408,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 409,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 410,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 411,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 412,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 413,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 414,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 415,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 416,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 417,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 418,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 419,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 420,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 421,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 422,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 423,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 424,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 425,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 426,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 427,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 428,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 429,
+      "at": 1792290866,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 430,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 431,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 432,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 433,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 434,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 435,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 436,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 437,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 438,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 439,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 440,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 441,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 442,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 443,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 444,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 445,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 446,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 447,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 448,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 449,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 450,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 451,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 452,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 453,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 454,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 455,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 456,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 457,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 458,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 459,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 460,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 461,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 462,
+      "at": 1792290867,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 463,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 464,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 465,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 466,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 467,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 468,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 469,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 470,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 471,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 472,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 473,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 474,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 475,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 476,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 477,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 478,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 479,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 480,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 481,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 482,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 483,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 484,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 485,
+      "at": 1792290868,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 486,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 487,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 488,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 489,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 490,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 491,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 492,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 493,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 494,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 495,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 496,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 497,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 498,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 499,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 500,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 501,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 502,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 503,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 504,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 505,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 506,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 507,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 508,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 509,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 510,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 511,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 512,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 513,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 514,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 515,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 516,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 517,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 518,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 519,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 520,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 521,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 522,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 523,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 524,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 525,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 526,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 527,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 528,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 529,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 530,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 531,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 532,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 533,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 534,
+      "at": 1792290869,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 535,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 536,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 537,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 538,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 539,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 540,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 541,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 542,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 543,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 544,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 545,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 546,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 547,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 548,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 549,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 550,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 551,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 552,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 553,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 554,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 555,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 556,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 557,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 558,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 559,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 560,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 561,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 562,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 563,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 564,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 565,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 566,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 567,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 568,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 569,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 570,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 571,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 572,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 573,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 574,
+      "at": 1792290870,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 575,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 576,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 577,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 578,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 579,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 580,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 581,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 582,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 583,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 584,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 585,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 586,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 587,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 588,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 589,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 590,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 591,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 592,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 593,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 594,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 595,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 596,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 597,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 598,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 599,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 600,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 601,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 602,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 603,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 604,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 605,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 606,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 607,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 608,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 609,
+      "at": 1792290871,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 610,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 611,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 612,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 613,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 614,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 615,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 616,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 617,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 618,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 619,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 620,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 621,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 622,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 623,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 624,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 625,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 626,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 627,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 628,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 629,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 630,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 631,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 632,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 633,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 634,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 635,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 636,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 637,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 638,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 639,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 640,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 641,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 642,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 643,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 644,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 645,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 646,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 647,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 648,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 649,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 650,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 651,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 652,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 653,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 654,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 655,
+      "at": 1792290872,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 656,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 657,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 658,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 659,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 660,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 661,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 662,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 663,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 664,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 665,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 666,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 667,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 668,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 669,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 670,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 671,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 672,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 673,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 674,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 675,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 676,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 677,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 678,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 679,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 680,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 681,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 682,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 683,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 684,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 685,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 686,
+      "at": 1792290873,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 687,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 688,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 689,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 690,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 691,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 692,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 693,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 694,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 695,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 696,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 697,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 698,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 699,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 700,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 701,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 702,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 703,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 704,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 705,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 706,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 707,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 708,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 709,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 710,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 711,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 712,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 713,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 714,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 715,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 716,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 717,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 718,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 719,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 720,
+      "at": 1792290874,
+      "kind": "appServer",
+      "taskId": "plan",
+      "message": "item/agentMessage/delta"
+    },
+    {
+      "id": 721,
+      "at": 1792290874,
+      "kind": "result",
+      "taskId": "plan",
+      "message": "Task result accepted from terminal turn status: completed"
+    },
+    {
+      "id": 722,
+      "at": 1792290925,
+      "kind": "human",
+      "taskId": "plan",
+      "message": "Human gate rejected"
+    }
+  ],
+  "nextEventId": 722
+}
